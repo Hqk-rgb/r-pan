@@ -7,9 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.constraints.NotBlank;
 
 /**
  * @author whf
@@ -21,13 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 @ServletComponentScan(basePackages = Constants.BASE_COMPONENT_SCAN_PATH)
 @RestController
 @Slf4j
-@ Api("接口测试类")
+@Api("接口测试类")
+@Validated
 public class PanLauncher {
     public static void main(String[] args) {
         SpringApplication.run(PanLauncher.class);
     }
     @GetMapping("hello")
-    public R hello(String name) {
+    public R<String> hello(@NotBlank(message = "name 不能为空") String name) {
         return R.data("hello " + name + "!");
     }
 }
