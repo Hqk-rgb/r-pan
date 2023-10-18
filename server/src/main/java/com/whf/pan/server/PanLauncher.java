@@ -2,6 +2,7 @@ package com.whf.pan.server;
 
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.response.R;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ServletComponentScan(basePackages = Constants.BASE_COMPONENT_SCAN_PATH)
 @RestController
 @Slf4j
+@ Api("接口测试类")
 public class PanLauncher {
     public static void main(String[] args) {
         SpringApplication.run(PanLauncher.class);

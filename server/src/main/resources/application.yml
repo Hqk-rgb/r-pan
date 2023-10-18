@@ -21,3 +21,14 @@ management:
       exposure:
         include: '*'
         exclude: env,beans
+swagger2:
+  show: true
+  group-name: ${spring.application.name}
+  base-package: com.whf
+  title: r-pan-server docs
+  description: 分布式网盘接口文档
+  terms-of-service-url: http://127.0.0.1:${server.port}
+  contact-name: 王瀚锋
+  contact-url: https://github.com/Hqk-rgb
+  contact-email: whfplus7@163.com
+  version: 1.0
