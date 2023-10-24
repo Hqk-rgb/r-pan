@@ -31,6 +31,6 @@ public class PanLauncher {
     }
     @GetMapping("hello")
     public R<String> hello(@NotBlank(message = "name 不能为空") String name) {
-        return R.data("hello " + name + "!");
+        return R.success("hello " + name + "!");
     }
 }
