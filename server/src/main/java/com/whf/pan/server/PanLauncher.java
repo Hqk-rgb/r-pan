@@ -31,6 +31,7 @@ public class PanLauncher {
     }
     @GetMapping("hello")
     public R<String> hello(@NotBlank(message = "name 不能为空") String name) {
-        return R.success("hello " + name + "!");
+        System.out.println(Thread.currentThread().getContextClassLoader());
+        return R.success("hello " + name + "! hava changed ~~");
     }
 }
