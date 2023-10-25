@@ -21,17 +21,19 @@ management:
       exposure:
         include: '*'
         exclude: env,beans
+
 swagger2:
   show: true
   group-name: ${spring.application.name}
-  base-package: com.whf
+  base-package: com.whf.pan
   title: r-pan-server docs
-  description: 分布式网盘接口文档
+  description: r-pan-server docs
   terms-of-service-url: http://127.0.0.1:${server.port}
-  contact-name: 王瀚锋
-  contact-url: https://github.com/Hqk-rgb
+  contact-name: whf
+  contact-url: https://blog.rubinchu.com
   contact-email: whfplus7@163.com
   version: 1.0
+
 
 logging:
   file: D:\logs\${spring.application.name}\${spring.application.name}.log
