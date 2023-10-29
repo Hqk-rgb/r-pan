@@ -5,20 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.whf</groupId>
-        <artifactId>r-pan</artifactId>
+        <artifactId>framework</artifactId>
         <version>1.0</version>
     </parent>
 
-    <artifactId>framework</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>core</module>
-        <module>web</module>
-        <module>swagger2</module>
-        <module>orm</module>
-        <module>cache</module>
-        <module>schedule</module>
-    </modules>
+    <artifactId>schedule</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -26,4 +17,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.whf</groupId>
+            <artifactId>core</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
 </project>
