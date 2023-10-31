@@ -2,6 +2,7 @@ package com.whf.pan.server.modules.user.mapper;
 
 import com.whf.pan.server.modules.user.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.springframework.data.repository.query.Param;
 
 /**
 * @author 26570
@@ -10,7 +11,13 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.whf.pan.server.modules.user.entity.User
 */
 public interface UserMapper extends BaseMapper<User> {
+    /**
+     * 通过用户名称查询用户设置的密保问题
+     * @param username
+     * @return
+     */
 
+    String selectQuestionByUsername(@Param("username") String username);
 }
 
 

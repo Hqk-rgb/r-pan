@@ -12,12 +12,15 @@ import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.user.constants.UserConstants;
+import com.whf.pan.server.modules.user.context.CheckAnswerContext;
+import com.whf.pan.server.modules.user.context.CheckUsernameContext;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.converter.UserConverter;
 import com.whf.pan.server.modules.user.entity.User;
 import com.whf.pan.server.modules.user.service.IUserService;
 import com.whf.pan.server.modules.user.mapper.UserMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
@@ -206,6 +209,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new BusinessException("用户退出登录失败");
         }
     }
+/****************************************************************校验用户名********************************************************************************/
+    @Override
+    public String checkUsername(CheckUsernameContext context) {
+        String question = baseMapper.selectQuestionByUsername(context.getUsername());
+        if (StringUtils.isBlank(question)){
+            throw new BusinessException("没有此用户");
+        }
+        return question;
+    }
+
+/*********************************************************校验密保答案************************************************************************/
+
+    /**
+     * 用户忘记密码-校验密保答案
+     *
+     * @param checkAnswerContext
+     * @return
+     */
+    @Override
+    public String checkAnswer(CheckAnswerContext checkAnswerContext) {
+        QueryWrapper wrapper = new QueryWrapper();
+        wrapper.eq("username", checkAnswerContext.getUsername());
+        wrapper.eq("question", checkAnswerContext.getQuestion());
+        wrapper.eq("answer", checkAnswerContext.getAnswer());
+        int count = count(wrapper);
+
+        if (count == 0) {
+            throw new BusinessException("密保答案错误");
+        }
+
+        return generateCheckAnswerToken(checkAnswerContext);
+    }
+
+    /**
+     * 生成用户忘记密码-校验密保答案通过的临时token
+     * token的失效时间为五分钟之后
+     *
+     * @param checkAnswerContext
+     * @return
+     */
+    private String generateCheckAnswerToken(CheckAnswerContext checkAnswerContext) {
+        String token = JwtUtil.generateToken(checkAnswerContext.getUsername(), UserConstants.FORGET_USERNAME, checkAnswerContext.getUsername(), UserConstants.FIVE_MINUTES_LONG);
+        return token;
+    }
+
 
 }
 

@@ -4,9 +4,13 @@ import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.annotation.LoginIgnore;
 import com.whf.pan.server.common.utils.UserIdUtil;
+import com.whf.pan.server.modules.user.context.CheckAnswerContext;
+import com.whf.pan.server.modules.user.context.CheckUsernameContext;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.converter.UserConverter;
+import com.whf.pan.server.modules.user.po.CheckAnswerPO;
+import com.whf.pan.server.modules.user.po.CheckUsernamePO;
 import com.whf.pan.server.modules.user.po.UserLoginPO;
 import com.whf.pan.server.modules.user.po.UserRegisterPO;
 import com.whf.pan.server.modules.user.service.IUserService;
@@ -76,5 +80,32 @@ public class UserController {
     public R exit(){
         userService.exit(UserIdUtil.get());
         return R.success("成功退出");
+    }
+
+    @ApiOperation(
+            value = "用户忘记密码-校验用户名",
+            notes = "该接口提供了用户忘记密码-校验用户名的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("username/check")
+    public R checkUsername(@Validated @RequestBody CheckUsernamePO checkUsernamePO){
+        CheckUsernameContext context = userConverter.checkUsernamePOToCheckUsernameContext(checkUsernamePO);
+        String question = userService.checkUsername(context);
+        return R.success("校验用户名成功",question);
+    }
+
+    @ApiOperation(
+            value = "用户忘记密码-校验密保答案",
+            notes = "该接口提供了用户忘记密码-校验密保答案的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("answer/check")
+    public R checkAnswer(@Validated @RequestBody CheckAnswerPO checkAnswerPO) {
+        CheckAnswerContext checkAnswerContext = userConverter.checkAnswerPOToCheckAnswerContext(checkAnswerPO);
+        String token = userService.checkAnswer(checkAnswerContext);
+        return R.success("校验密保答案成功",token);
     }
 }

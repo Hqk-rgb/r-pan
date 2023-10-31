@@ -1,5 +1,7 @@
 package com.whf.pan.server.modules.user.service;
 
+import com.whf.pan.server.modules.user.context.CheckAnswerContext;
+import com.whf.pan.server.modules.user.context.CheckUsernameContext;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.entity.User;
@@ -34,4 +36,20 @@ public interface IUserService extends IService<User> {
      * @return
      */
     void exit(Long userId);
+
+    /**
+     * 校验用户名
+     *
+     * @param context
+     * @return
+     */
+    String checkUsername(CheckUsernameContext context);
+
+    /**
+     * 用户忘记密码-校验密保答案
+     *
+     * @param checkAnswerContext
+     * @return
+     */
+    String checkAnswer(CheckAnswerContext checkAnswerContext);
 }

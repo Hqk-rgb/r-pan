@@ -1,8 +1,12 @@
 package com.whf.pan.server.modules.user.converter;
 
+import com.whf.pan.server.modules.user.context.CheckAnswerContext;
+import com.whf.pan.server.modules.user.context.CheckUsernameContext;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.entity.User;
+import com.whf.pan.server.modules.user.po.CheckAnswerPO;
+import com.whf.pan.server.modules.user.po.CheckUsernamePO;
 import com.whf.pan.server.modules.user.po.UserLoginPO;
 import com.whf.pan.server.modules.user.po.UserRegisterPO;
 import org.mapstruct.Mapper;
@@ -35,5 +39,17 @@ public interface UserConverter {
      * @return null
      */
     UserLoginContext userLoginPOToUserLoginContext(UserLoginPO userLoginPO);
+
+    /** 将 CheckUsernamePO 转化成 CheckUsernameContext
+     * @param checkUsernamePO
+     * @return null
+     */
+    CheckUsernameContext checkUsernamePOToCheckUsernameContext(CheckUsernamePO checkUsernamePO);
+
+    /** 将 CheckAnswerPO 转化成 CheckUsernameContext
+     * @param checkAnswerPO
+     * @return null
+     */
+    CheckAnswerContext checkAnswerPOToCheckAnswerContext(CheckAnswerPO checkAnswerPO);
 
 }

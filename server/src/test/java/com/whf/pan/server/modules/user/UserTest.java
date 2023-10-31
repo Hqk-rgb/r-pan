@@ -5,6 +5,8 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.JwtUtil;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.user.constants.UserConstants;
+import com.whf.pan.server.modules.user.context.CheckAnswerContext;
+import com.whf.pan.server.modules.user.context.CheckUsernameContext;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.service.IUserService;
@@ -28,7 +30,7 @@ import javax.annotation.Resource;
 @Transactional
 public class UserTest {
 
-    private final static String USERNAME = "Joker";
+    private final static String USERNAME = "Faker";
     private final static String PASSWORD = "123456789";
     private final static String QUESTION = "question";
     private final static String ANSWER = "answer";
@@ -150,5 +152,72 @@ public class UserTest {
 
         userService.exit(userId);
     }
+    /**************************************************用户忘记密码-校验用户名*****************************************************/
 
+    /**
+     * 校验用户名称通过
+     */
+    @Test
+    public void checkUsernameSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
+        checkUsernameContext.setUsername(USERNAME);
+        String question = userService.checkUsername(checkUsernameContext);
+        Assert.isTrue(StringUtils.isNotBlank(question));;
+    }
+
+    /**
+     * 校验用户名称不存在
+     */
+    @Test(expected = BusinessException.class)
+    public void checkUsernameNotExist(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
+        checkUsernameContext.setUsername(USERNAME+"_change");
+        userService.checkUsername(checkUsernameContext);
+    }
+
+    /**************************************************用户忘记密码-校验用户名*****************************************************/
+
+    /**
+     * 校验密保答案通过
+     */
+    @Test
+    public void checkAnswerSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER);
+
+        String token = userService.checkAnswer(checkAnswerContext);
+        Assert.isTrue(StringUtils.isNotBlank(token));
+    }
+
+    /**
+     * 校验密保答案失败
+     */
+    @Test(expected = BusinessException.class)
+    public void checkAnswerFail(){
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER + "_change");
+
+        userService.checkAnswer(checkAnswerContext);
+
+    }
 }
