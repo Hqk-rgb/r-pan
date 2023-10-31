@@ -304,6 +304,71 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
     }
 
+    /**************************************************在线修改密码*****************************************************************/
+
+    /**
+     * 在线修改密码
+     * 1、校验旧密码
+     * 2、重置新密码
+     * 3、退出当前的登录状态
+     *
+     * @param changePasswordContext
+     */
+    @Override
+    public void changePassword(ChangePasswordContext changePasswordContext) {
+        checkOldPassword(changePasswordContext);
+        doChangePassword(changePasswordContext);
+        exitLoginStatus(changePasswordContext);
+    }
+
+    /**
+     * 校验用户的旧密码
+     * 改不周会查询并封装用户的实体信息到上下文对象中
+     *
+     * @param changePasswordContext
+     */
+    private void checkOldPassword(ChangePasswordContext changePasswordContext) {
+        Long userId = changePasswordContext.getUserId();
+        String oldPassword = changePasswordContext.getOldPassword();
+
+        User entity = getById(userId);
+        if (Objects.isNull(entity)) {
+            throw new BusinessException("用户信息不存在");
+        }
+        changePasswordContext.setEntity(entity);
+
+        String encOldPassword = PasswordUtil.encryptPassword(entity.getSalt(), oldPassword);
+        String dbOldPassword = entity.getPassword();
+        if (!Objects.equals(encOldPassword, dbOldPassword)) {
+            throw new BusinessException("旧密码不正确");
+        }
+    }
+    /**
+     * 修改新密码
+     *
+     * @param changePasswordContext
+     */
+    private void doChangePassword(ChangePasswordContext changePasswordContext) {
+        String newPassword = changePasswordContext.getNewPassword();
+        User entity = changePasswordContext.getEntity();
+        String salt = entity.getSalt();
+
+        String encNewPassword = PasswordUtil.encryptPassword(salt, newPassword);
+
+        entity.setPassword(encNewPassword);
+
+        if (!updateById(entity)) {
+            throw new BusinessException("修改用户密码失败");
+        }
+    }
+    /**
+     * 退出用户的登录状态
+     *
+     * @param changePasswordContext
+     */
+    private void exitLoginStatus(ChangePasswordContext changePasswordContext) {
+        exit(changePasswordContext.getUserId());
+    }
 }
 
 

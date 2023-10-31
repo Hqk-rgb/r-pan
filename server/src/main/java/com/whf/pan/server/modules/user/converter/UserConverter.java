@@ -53,4 +53,12 @@ public interface UserConverter {
      */
     ResetPasswordContext resetPasswordPOTOResetPasswordContext(ResetPasswordPO resetPasswordPO);
 
+    /**
+     * ChangePasswordPO 转化成 ChangePasswordContext
+     *
+     * @param changePasswordPO
+     * @return
+     */
+    ChangePasswordContext changePasswordPOTOChangePasswordContext(ChangePasswordPO changePasswordPO);
+
 }

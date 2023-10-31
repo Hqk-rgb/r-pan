@@ -273,4 +273,42 @@ public class UserTest {
         userService.resetPassword(resetPasswordContext);
     }
 
+/**************************************************用户在线修改密码*****************************************************/
+
+/**
+     * 正常在线修改密码
+     */
+    @Test
+    public void changePasswordSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        ChangePasswordContext changePasswordContext = new ChangePasswordContext();
+
+        changePasswordContext.setUserId(register);
+        changePasswordContext.setOldPassword(PASSWORD);
+        changePasswordContext.setNewPassword(PASSWORD + "_change");
+
+        userService.changePassword(changePasswordContext);
+    }
+
+    /**
+     * 修改密码失败-旧密码错误
+     */
+    @Test(expected = BusinessException.class)
+    public void changePasswordFailByWrongOldPassword() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        ChangePasswordContext changePasswordContext = new ChangePasswordContext();
+
+        changePasswordContext.setUserId(register);
+        changePasswordContext.setOldPassword(PASSWORD + "_change");
+        changePasswordContext.setNewPassword(PASSWORD + "_change");
+
+        userService.changePassword(changePasswordContext);
+    }
+
 }

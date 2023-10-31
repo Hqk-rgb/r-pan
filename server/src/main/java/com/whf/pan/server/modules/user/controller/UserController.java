@@ -4,15 +4,9 @@ import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.annotation.LoginIgnore;
 import com.whf.pan.server.common.utils.UserIdUtil;
-import com.whf.pan.server.modules.user.context.CheckAnswerContext;
-import com.whf.pan.server.modules.user.context.CheckUsernameContext;
-import com.whf.pan.server.modules.user.context.UserLoginContext;
-import com.whf.pan.server.modules.user.context.UserRegisterContext;
+import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.converter.UserConverter;
-import com.whf.pan.server.modules.user.po.CheckAnswerPO;
-import com.whf.pan.server.modules.user.po.CheckUsernamePO;
-import com.whf.pan.server.modules.user.po.UserLoginPO;
-import com.whf.pan.server.modules.user.po.UserRegisterPO;
+import com.whf.pan.server.modules.user.po.*;
 import com.whf.pan.server.modules.user.service.IUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -108,5 +102,33 @@ public class UserController {
         CheckAnswerContext checkAnswerContext = userConverter.checkAnswerPOToCheckAnswerContext(checkAnswerPO);
         String token = userService.checkAnswer(checkAnswerContext);
         return R.success("校验密保答案成功",token);
+    }
+
+    @ApiOperation(
+            value = "用户忘记密码-重置新密码",
+            notes = "该接口提供了用户忘记密码-重置新密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("password/reset")
+    @LoginIgnore
+    public R resetPassword(@Validated @RequestBody ResetPasswordPO resetPasswordPO) {
+        ResetPasswordContext resetPasswordContext = userConverter.resetPasswordPOTOResetPasswordContext(resetPasswordPO);
+        userService.resetPassword(resetPasswordContext);
+        return R.success("重置新密码成功");
+    }
+
+    @ApiOperation(
+            value = "用户在线修改密码",
+            notes = "该接口提供了用户在线修改密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("password/change")
+    public R changePassword(@Validated @RequestBody ChangePasswordPO changePasswordPO) {
+        ChangePasswordContext changePasswordContext = userConverter.changePasswordPOTOChangePasswordContext(changePasswordPO);
+        changePasswordContext.setUserId(UserIdUtil.get());
+        userService.changePassword(changePasswordContext);
+        return R.success();
     }
 }

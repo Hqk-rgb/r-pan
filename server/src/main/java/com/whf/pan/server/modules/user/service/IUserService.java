@@ -57,4 +57,11 @@ public interface IUserService extends IService<User> {
      * @return
      */
     void resetPassword(ResetPasswordContext resetPasswordContext);
+
+    /**
+     * 在线修改密码
+     *
+     * @param changePasswordContext
+     */
+    void changePassword(ChangePasswordContext changePasswordContext);
 }
