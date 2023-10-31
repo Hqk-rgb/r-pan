@@ -37,6 +37,16 @@
             <artifactId>mybatis-plus</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.whf</groupId>
+            <artifactId>schedule</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.whf</groupId>
+            <artifactId>cache-redis</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -23,19 +23,19 @@ import javax.validation.constraints.NotBlank;
  */
 @SpringBootApplication(scanBasePackages = Constants.BASE_COMPONENT_SCAN_PATH)
 @ServletComponentScan(basePackages = Constants.BASE_COMPONENT_SCAN_PATH)
-@RestController
-@Slf4j
-@Api("接口测试类")
-@Validated
+//@RestController
+//@Slf4j
+//@Api("接口测试类")
+//@Validated
 @EnableTransactionManagement
 @MapperScan(basePackages = Constants.BASE_COMPONENT_SCAN_PATH+".server.modules.**.mapper")
 public class PanLauncher {
     public static void main(String[] args) {
         SpringApplication.run(PanLauncher.class);
     }
-    @GetMapping("hello")
-    public R<String> hello(@NotBlank(message = "name 不能为空") String name) {
-        System.out.println(Thread.currentThread().getContextClassLoader());
-        return R.success("hello " + name + "! hava changed ！");
-    }
+//    @GetMapping("hello")
+//    public R<String> hello(@NotBlank(message = "name 不能为空") String name) {
+//        System.out.println(Thread.currentThread().getContextClassLoader());
+//        return R.success("hello " + name + "! hava changed ！");
+//    }
 }

@@ -15,27 +15,27 @@ public enum ResponseCode {
     /**
      * 成功
      */
-    SUCCESS(0, "SUCCESS"),
+    SUCCESS(200, "SUCCESS"),
     /**
      * 错误
      */
-    ERROR(1, "ERROR"),
+    ERROR(400, "ERROR"),
     /**
      * token过期
      */
-    TOKEN_EXPIRE(2, "TOKEN_EXPIRE"),
+    TOKEN_EXPIRE(402, "TOKEN_EXPIRE"),
     /**
      * 参数错误
      */
-    ERROR_PARAM(3, "ERROR_PARAM"),
+    ERROR_PARAM(401, "ERROR_PARAM"),
     /**
      * 无权限访问
      */
-    ACCESS_DENIED(4, "ACCESS_DENIED"),
+    ACCESS_DENIED(401, "UNAUTHORIZED"),
     /**
      * 需要登录
      */
-    NEED_LOGIN(10, "NEED_LOGIN");
+    NEED_LOGIN(100, "NEED_LOGIN");
 
     /**
      * 状态码

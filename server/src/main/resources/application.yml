@@ -1,6 +1,9 @@
 spring:
   application:
     name: server
+  redis:
+    database: 1
+    host: 127.0.0.1
   output:
     ansi:
       enabled: always

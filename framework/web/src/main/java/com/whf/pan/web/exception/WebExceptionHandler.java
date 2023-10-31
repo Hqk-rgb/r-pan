@@ -1,6 +1,7 @@
 package com.whf.pan.web.exception;
 
 import com.whf.pan.core.exception.BusinessException;
+import com.whf.pan.core.exception.FrameworkException;
 import org.springframework.validation.BindException;
 import com.whf.pan.core.response.R;
 import com.whf.pan.core.response.ResponseCode;
@@ -80,6 +81,15 @@ public class WebExceptionHandler {
         return R.fail(ResponseCode.ERROR_PARAM.getCode(), fieldError.getDefaultMessage());
     }
 
+    /**
+     * 技术组件层面的异常
+     * @param e
+     * @return
+     */
+    @ExceptionHandler(value = FrameworkException.class)
+    public R frameworkExceptionHandler(FrameworkException e) {
+        return R.fail(ResponseCode.ERROR.getCode(), e.getMessage());
+    }
     /**
      * 运行时异常
      * @param e
