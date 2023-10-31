@@ -88,6 +88,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @LoginIgnore
     @PostMapping("username/check")
     public R checkUsername(@Validated @RequestBody CheckUsernamePO checkUsernamePO){
         CheckUsernameContext context = userConverter.checkUsernamePOToCheckUsernameContext(checkUsernamePO);

@@ -1,9 +1,6 @@
 package com.whf.pan.server.modules.user.service;
 
-import com.whf.pan.server.modules.user.context.CheckAnswerContext;
-import com.whf.pan.server.modules.user.context.CheckUsernameContext;
-import com.whf.pan.server.modules.user.context.UserLoginContext;
-import com.whf.pan.server.modules.user.context.UserRegisterContext;
+import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -52,4 +49,12 @@ public interface IUserService extends IService<User> {
      * @return
      */
     String checkAnswer(CheckAnswerContext checkAnswerContext);
+
+    /**
+     * 重置用户密码
+     *
+     * @param resetPasswordContext
+     * @return
+     */
+    void resetPassword(ResetPasswordContext resetPasswordContext);
 }

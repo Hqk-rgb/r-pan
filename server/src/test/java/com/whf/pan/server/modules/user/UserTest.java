@@ -5,10 +5,7 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.JwtUtil;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.user.constants.UserConstants;
-import com.whf.pan.server.modules.user.context.CheckAnswerContext;
-import com.whf.pan.server.modules.user.context.CheckUsernameContext;
-import com.whf.pan.server.modules.user.context.UserLoginContext;
-import com.whf.pan.server.modules.user.context.UserRegisterContext;
+import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.service.IUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -220,4 +217,60 @@ public class UserTest {
         userService.checkAnswer(checkAnswerContext);
 
     }
+
+    /**************************************************用户忘记密码-重置密码*****************************************************/
+
+
+    /**
+     * 正常重置用户密码
+     */
+    @Test
+    public void resetPasswordSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER);
+
+        String token = userService.checkAnswer(checkAnswerContext);
+
+        Assert.isTrue(StringUtils.isNotBlank(token));
+
+        ResetPasswordContext resetPasswordContext = new ResetPasswordContext();
+        resetPasswordContext.setUsername(USERNAME);
+        resetPasswordContext.setPassword(PASSWORD + "_change");
+        resetPasswordContext.setToken(token);
+
+        userService.resetPassword(resetPasswordContext);
+    }
+
+    /**
+     * 用户重置密码失败-token异常
+     */
+    @Test(expected = BusinessException.class)
+    public void resetPasswordTokenError() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER);
+
+        String token = userService.checkAnswer(checkAnswerContext);
+
+        Assert.isTrue(StringUtils.isNotBlank(token));
+
+        ResetPasswordContext resetPasswordContext = new ResetPasswordContext();
+        resetPasswordContext.setUsername(USERNAME);
+        resetPasswordContext.setPassword(PASSWORD + "_change");
+        resetPasswordContext.setToken(token + "_change");
+
+        userService.resetPassword(resetPasswordContext);
+    }
+
 }

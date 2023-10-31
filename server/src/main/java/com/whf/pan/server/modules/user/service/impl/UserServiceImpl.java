@@ -12,10 +12,7 @@ import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.user.constants.UserConstants;
-import com.whf.pan.server.modules.user.context.CheckAnswerContext;
-import com.whf.pan.server.modules.user.context.CheckUsernameContext;
-import com.whf.pan.server.modules.user.context.UserLoginContext;
-import com.whf.pan.server.modules.user.context.UserRegisterContext;
+import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.converter.UserConverter;
 import com.whf.pan.server.modules.user.entity.User;
 import com.whf.pan.server.modules.user.service.IUserService;
@@ -253,7 +250,59 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String token = JwtUtil.generateToken(checkAnswerContext.getUsername(), UserConstants.FORGET_USERNAME, checkAnswerContext.getUsername(), UserConstants.FIVE_MINUTES_LONG);
         return token;
     }
+    /***********************************************重置密码************************************************************************/
 
+    /**
+     * 重置用户密码
+     * 1、校验token是不是有效
+     * 2、重置密码
+     *
+     * @param resetPasswordContext
+     */
+    @Override
+    public void resetPassword(ResetPasswordContext resetPasswordContext) {
+        checkForgetPasswordToken(resetPasswordContext);
+        checkAndResetUserPassword(resetPasswordContext);
+    }
+
+    /**
+     * 校验用户信息并重置用户密码
+     *
+     * @param resetPasswordContext
+     */
+    private void checkAndResetUserPassword(ResetPasswordContext resetPasswordContext) {
+        String username = resetPasswordContext.getUsername();
+        String password = resetPasswordContext.getPassword();
+        User entity = getUserByUsername(username);
+        if (Objects.isNull(entity)) {
+            throw new BusinessException("用户信息不存在");
+        }
+
+        String newDbPassword = PasswordUtil.encryptPassword(entity.getSalt(), password);
+        entity.setPassword(newDbPassword);
+        entity.setUpdateTime(new Date());
+
+        if (!updateById(entity)) {
+            throw new BusinessException("重置用户密码失败");
+        }
+    }
+
+    /**
+     * 验证忘记密码的token是否有效
+     *
+     * @param resetPasswordContext
+     */
+    private void checkForgetPasswordToken(ResetPasswordContext resetPasswordContext) {
+        String token = resetPasswordContext.getToken();
+        Object value = JwtUtil.analyzeToken(token, UserConstants.FORGET_USERNAME);
+        if (Objects.isNull(value)) {
+            throw new BusinessException(ResponseCode.TOKEN_EXPIRE);
+        }
+        String tokenUsername = String.valueOf(value);
+        if (!Objects.equals(tokenUsername, resetPasswordContext.getUsername())) {
+            throw new BusinessException("token错误");
+        }
+    }
 
 }
 
