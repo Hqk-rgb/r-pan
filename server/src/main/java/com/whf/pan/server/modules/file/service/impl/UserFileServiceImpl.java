@@ -194,6 +194,22 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return newFilename;
     }
 
+    /**
+     * 查询用户的根文件夹信息
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public UserFile getUserRootFile(Long userId) {
+        QueryWrapper wrapper = new QueryWrapper();
+        wrapper.eq("user_id", userId);
+        wrapper.eq("parent_id", FileConstants.TOP_PARENT_ID);
+        wrapper.eq("del_flag", DelFlagEnum.NO.getCode());
+        wrapper.eq("folder_flag", FolderFlagEnum.YES.getCode());
+        return getOne(wrapper);
+    }
+
 }
 
 

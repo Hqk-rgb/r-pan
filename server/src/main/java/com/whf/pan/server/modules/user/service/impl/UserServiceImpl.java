@@ -10,6 +10,7 @@ import com.whf.pan.core.utils.JwtUtil;
 import com.whf.pan.core.utils.PasswordUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
+import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.user.constants.UserConstants;
 import com.whf.pan.server.modules.user.context.*;
@@ -17,6 +18,7 @@ import com.whf.pan.server.modules.user.converter.UserConverter;
 import com.whf.pan.server.modules.user.entity.User;
 import com.whf.pan.server.modules.user.service.IUserService;
 import com.whf.pan.server.modules.user.mapper.UserMapper;
+import com.whf.pan.server.modules.user.vo.UserInfoVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -368,6 +370,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     private void exitLoginStatus(ChangePasswordContext changePasswordContext) {
         exit(changePasswordContext.getUserId());
+    }
+
+    /********************************************查询当前在线用户信息****************************************************************/
+
+    /**
+     * 查询在线用户的基本信息
+     * 1、查询用户的基本信息实体
+     * 2、查询用户的根文件夹信息
+     * 3、拼装VO对象返回
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public UserInfoVO info(Long userId) {
+        User entity = getById(userId);
+        if (Objects.isNull(entity)) {
+            throw new BusinessException("用户信息查询失败");
+        }
+
+        UserFile rPanUserFile = getUserRootFileInfo(userId);
+        if (Objects.isNull(rPanUserFile)) {
+            throw new BusinessException("查询用户根文件夹信息失败");
+        }
+
+        return userConverter.assembleUserInfoVO(entity, rPanUserFile);
+    }
+    /**
+     * 获取用户根文件夹信息实体
+     *
+     * @param userId
+     * @return
+     */
+    private UserFile getUserRootFileInfo(Long userId) {
+        return userFileService.getUserRootFile(userId);
     }
 }
 

@@ -1,8 +1,10 @@
 package com.whf.pan.server.modules.user.converter;
 
+import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.entity.User;
 import com.whf.pan.server.modules.user.po.*;
+import com.whf.pan.server.modules.user.vo.UserInfoVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -60,5 +62,18 @@ public interface UserConverter {
      * @return
      */
     ChangePasswordContext changePasswordPOTOChangePasswordContext(ChangePasswordPO changePasswordPO);
+
+    /**
+     * 拼装用户基本信息返回实体
+     *
+     * @param rPanUser
+     * @param rPanUserFile
+     * @return
+     */
+    @Mapping(source = "rPanUser.username", target = "username")
+    @Mapping(source = "rPanUserFile.fileId", target = "rootFileId")
+    @Mapping(source = "rPanUserFile.filename", target = "rootFilename")
+    UserInfoVO assembleUserInfoVO(User rPanUser, UserFile rPanUserFile);
+
 
 }

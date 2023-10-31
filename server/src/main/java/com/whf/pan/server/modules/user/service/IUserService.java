@@ -3,6 +3,7 @@ package com.whf.pan.server.modules.user.service;
 import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.whf.pan.server.modules.user.vo.UserInfoVO;
 
 /**
 * @author 26570
@@ -64,4 +65,12 @@ public interface IUserService extends IService<User> {
      * @param changePasswordContext
      */
     void changePassword(ChangePasswordContext changePasswordContext);
+
+    /**
+     * 查询在线用户的基本信息
+     *
+     * @param userId
+     * @return
+     */
+    UserInfoVO info(Long userId);
 }

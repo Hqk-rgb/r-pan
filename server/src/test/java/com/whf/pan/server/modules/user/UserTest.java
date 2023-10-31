@@ -7,6 +7,7 @@ import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.user.constants.UserConstants;
 import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.service.IUserService;
+import com.whf.pan.server.modules.user.vo.UserInfoVO;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -309,6 +310,17 @@ public class UserTest {
         changePasswordContext.setNewPassword(PASSWORD + "_change");
 
         userService.changePassword(changePasswordContext);
+    }
+    /*****************************************查询在线用户基本信息*******************************************************************/
+    @Test
+    public void testQueryUserInfo() {
+
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = userService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserInfoVO userInfoVO = userService.info(register);
+        Assert.notNull(userInfoVO);
     }
 
 }
