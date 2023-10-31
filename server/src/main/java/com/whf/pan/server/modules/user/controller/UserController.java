@@ -2,6 +2,7 @@ package com.whf.pan.server.modules.user.controller;
 
 import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
+import com.whf.pan.server.common.annotation.LoginIgnore;
 import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
@@ -36,6 +37,7 @@ public class UserController {
     @Resource
     private UserConverter userConverter;
 
+    @LoginIgnore
     @ApiOperation(
             value = "用户注册",
             notes = "该接口提供了用户注册的功能，实现幂等性注册的逻辑，放心多并发调用",
@@ -50,6 +52,7 @@ public class UserController {
         // return R.data(IdUtil.encrypt(userId));
     }
 
+    @LoginIgnore
     @ApiOperation(
             value = "用户登录",
             notes = "该接口提供了用户登录的功能，成功登录后，会返回有时效性的 accessToken 供后续服务使用",
