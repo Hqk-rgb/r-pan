@@ -1,8 +1,12 @@
 package com.whf.pan.server.modules.file.service;
 
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
+import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.whf.pan.server.modules.file.vo.UserFileVO;
+
+import java.util.List;
 
 /**
 * @author 26570
@@ -23,5 +27,12 @@ public interface IUserFileService extends IService<UserFile> {
      * @return
      */
     UserFile getUserRootFile(Long userId);
+
+    /**
+     * 查询用户的文件列表
+     * @param context
+     * @return
+     */
+    List<UserFileVO> getFileList(QueryFileListContext context);
 
 }

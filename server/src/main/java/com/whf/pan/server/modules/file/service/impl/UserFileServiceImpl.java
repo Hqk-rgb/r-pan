@@ -7,16 +7,17 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
+import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.enums.FolderFlagEnum;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.mapper.UserFileMapper;
+import com.whf.pan.server.modules.file.vo.UserFileVO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import javax.management.ValueExp;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -208,6 +209,16 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         wrapper.eq("del_flag", DelFlagEnum.NO.getCode());
         wrapper.eq("folder_flag", FolderFlagEnum.YES.getCode());
         return getOne(wrapper);
+    }
+
+    /**
+     * 查询用户的文件列表
+     * @param context
+     * @return
+     */
+    @Override
+    public List<UserFileVO> getFileList(QueryFileListContext context) {
+        return baseMapper.selectFileList(context);
     }
 
 }
