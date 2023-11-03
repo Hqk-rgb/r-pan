@@ -8,9 +8,11 @@ import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
+import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
 import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.CreateFolderPO;
+import com.whf.pan.server.modules.file.po.UpdateFilenamePO;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
@@ -80,6 +82,18 @@ public class FileController {
         CreateFolderContext context = fileConverter.createFolderPOTOCreateFolderContext(createFolderPO);
         Long fileId = userFileService.createFolder(context);
         return R.data(IdUtil.encrypt(fileId));
+    }
+    @ApiOperation(
+            value = "文件重命名",
+            notes = "该接口提供了文件重命名的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PutMapping("file")
+    public R updateFilename(@Validated @RequestBody UpdateFilenamePO updateFilenamePO) {
+        UpdateFilenameContext context = fileConverter.updateFilenamePOTOUpdateFilenameContext(updateFilenamePO);
+        userFileService.updateFilename(context);
+        return R.success();
     }
 
 }
