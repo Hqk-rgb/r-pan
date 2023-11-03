@@ -2,6 +2,7 @@ package com.whf.pan.server.modules.file.service;
 
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
+import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
@@ -34,5 +35,12 @@ public interface IUserFileService extends IService<UserFile> {
      * @return
      */
     List<UserFileVO> getFileList(QueryFileListContext context);
+
+    /**
+     * 更新文件名称
+     *
+     * @param context
+     */
+    void updateFilename(UpdateFilenameContext context);
 
 }

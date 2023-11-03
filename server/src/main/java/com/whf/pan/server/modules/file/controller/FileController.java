@@ -6,16 +6,17 @@ import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
+import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
+import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
+import com.whf.pan.server.modules.file.po.CreateFolderPO;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotBlank;
@@ -35,6 +36,9 @@ public class FileController {
 
     @Resource
     private IUserFileService userFileService;
+
+    @Resource
+    private FileConverter fileConverter;
 
     @ApiOperation(
             value = "获取文件列表",
@@ -63,6 +67,19 @@ public class FileController {
         List<UserFileVO> result = userFileService.getFileList(context);
         return R.data(result);
 
+    }
+
+    @ApiOperation(
+            value = "创建文件夹",
+            notes = "该接口提供了创建文件夹的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping(value = "file/folder")
+    public R<String> createFolder(@Validated @RequestBody CreateFolderPO createFolderPO){
+        CreateFolderContext context = fileConverter.createFolderPOTOCreateFolderContext(createFolderPO);
+        Long fileId = userFileService.createFolder(context);
+        return R.data(IdUtil.encrypt(fileId));
     }
 
 }
