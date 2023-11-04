@@ -1,12 +1,15 @@
 package com.whf.pan.server.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.IdUtil;
+import com.whf.pan.server.common.event.file.DeleteFileEvent;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
+import com.whf.pan.server.modules.file.context.DeleteFileContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
@@ -17,11 +20,15 @@ import com.whf.pan.server.modules.file.mapper.UserFileMapper;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -30,7 +37,13 @@ import java.util.stream.Collectors;
 * @createDate 2023-10-28 15:45:30
 */
 @Service(value = "userFileService")
-public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService {
+public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService, ApplicationContextAware {
+
+//    @Autowired
+//    @Qualifier(value = "defaultStreamProducer")
+//    private IStreamProducer producer;
+
+
 
     /** 创建文件夹信息
      * @param createFolderContext
@@ -292,7 +305,98 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         }
     }
 
+    /*************************************************************************批量删除文件***********************************************************************************************/
 
+
+    /**
+     * 批量删除用户文件
+     * <p>
+     * 1、校验删除的条件
+     * 2、执行批量删除的动作
+     * 3、发布批量删除文件的事件，给其他模块订阅使用
+     *
+     * @param context
+     */
+    @Override
+    public void deleteFile(DeleteFileContext context) {
+        checkFileDeleteCondition(context);
+        doDeleteFile(context);
+        afterFileDelete(context);
+    }
+
+    /**
+     * 删除文件之前的前置校验
+     * <p>
+     * 1、文件ID合法校验
+     * 2、用户拥有删除该文件的权限
+     *
+     * @param context
+     */
+    private void checkFileDeleteCondition(DeleteFileContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+
+        List<UserFile> rPanUserFiles = listByIds(fileIdList);
+        if (rPanUserFiles.size() != fileIdList.size()) {
+            throw new BusinessException("存在不合法的文件记录");
+        }
+
+        Set<Long> fileIdSet = rPanUserFiles.stream().map(UserFile::getFileId).collect(Collectors.toSet());
+        int oldSize = fileIdSet.size();
+        fileIdSet.addAll(fileIdList);
+        int newSize = fileIdSet.size();
+
+        if (oldSize != newSize) {
+            throw new BusinessException("存在不合法的文件记录");
+        }
+
+        Set<Long> userIdSet = rPanUserFiles.stream().map(UserFile::getUserId).collect(Collectors.toSet());
+        if (userIdSet.size() != 1) {
+            throw new BusinessException("存在不合法的文件记录");
+        }
+
+        Long dbUserId = userIdSet.stream().findFirst().get();
+        if (!Objects.equals(dbUserId, context.getUserId())) {
+            throw new BusinessException("当前登录用户没有删除该文件的权限");
+        }
+    }
+
+    /**
+     * 执行文件删除的操作
+     *
+     * @param context
+     */
+    private void doDeleteFile(DeleteFileContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+
+        UpdateWrapper updateWrapper = new UpdateWrapper();
+        updateWrapper.in("file_id", fileIdList);
+        updateWrapper.set("del_flag", DelFlagEnum.YES.getCode());
+        updateWrapper.set("update_time", new Date());
+
+        if (!update(updateWrapper)) {
+            throw new BusinessException("文件删除失败");
+        }
+    }
+
+    /**
+     * 文件删除的后置操作
+     * <p>
+     * 1、对外发布文件删除的事件
+     *
+     * @param context
+     */
+    private void afterFileDelete(DeleteFileContext context) {
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this,context.getFileIdList());
+        applicationContext.publishEvent(deleteFileEvent);
+    }
+
+
+    private  ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 }
 
 

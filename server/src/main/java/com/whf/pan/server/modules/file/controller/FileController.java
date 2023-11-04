@@ -7,11 +7,13 @@ import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
+import com.whf.pan.server.modules.file.context.DeleteFileContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
 import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.CreateFolderPO;
+import com.whf.pan.server.modules.file.po.DeleteFilePO;
 import com.whf.pan.server.modules.file.po.UpdateFilenamePO;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
@@ -93,6 +95,25 @@ public class FileController {
     public R updateFilename(@Validated @RequestBody UpdateFilenamePO updateFilenamePO) {
         UpdateFilenameContext context = fileConverter.updateFilenamePOTOUpdateFilenameContext(updateFilenamePO);
         userFileService.updateFilename(context);
+        return R.success();
+    }
+
+    @ApiOperation(
+            value = "批量删除文件",
+            notes = "该接口提供了批量删除文件的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("file")
+    public R deleteFilename(@Validated @RequestBody DeleteFilePO deleteFilePO) {
+        DeleteFileContext context = fileConverter.deleteFilePOTODeleteFileContext(deleteFilePO);
+
+        String fileIds = deleteFilePO.getFileIds();
+        // 将一个包含了文件ID的字符串解析成一个 List<Long>类型的 fileIdList
+        List<Long> fileIdList = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(fileIds).stream().map(IdUtil::decrypt).collect(Collectors.toList());
+
+        context.setFileIdList(fileIdList);
+        userFileService.deleteFile(context);
         return R.success();
     }
 
