@@ -1,9 +1,6 @@
 package com.whf.pan.server.modules.file.service;
 
-import com.whf.pan.server.modules.file.context.CreateFolderContext;
-import com.whf.pan.server.modules.file.context.DeleteFileContext;
-import com.whf.pan.server.modules.file.context.QueryFileListContext;
-import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
+import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
@@ -50,5 +47,13 @@ public interface IUserFileService extends IService<UserFile> {
      * @param context
      */
     void deleteFile(DeleteFileContext context);
+
+    /**
+     * 文件秒传功能
+     *
+     * @param context
+     * @return
+     */
+    boolean secUpload(SecUploadFileContext context);
 
 }

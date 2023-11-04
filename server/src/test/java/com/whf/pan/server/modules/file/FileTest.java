@@ -3,12 +3,12 @@ package com.whf.pan.server.modules.file;
 import cn.hutool.core.lang.Assert;
 import com.google.common.collect.Lists;
 import com.whf.pan.core.exception.BusinessException;
+import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.PanLauncher;
-import com.whf.pan.server.modules.file.context.CreateFolderContext;
-import com.whf.pan.server.modules.file.context.DeleteFileContext;
-import com.whf.pan.server.modules.file.context.QueryFileListContext;
-import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
+import com.whf.pan.server.modules.file.context.*;
+import com.whf.pan.server.modules.file.entity.File;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
+import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
@@ -23,6 +23,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -285,6 +286,75 @@ public class FileTest {
         deleteFileContext.setUserId(userId);
 
         userFileService.deleteFile(deleteFileContext);
+    }
+
+    /**********************************************************************秒传文件********************************************************************************/
+
+    @Resource
+    private IFileService fileService;
+
+    /**
+     * 校验秒传文件成功
+     */
+    @Test
+    public void testSecUploadSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        String identifier = "123456789";
+
+        File record = new File();
+        record.setFileId(IdUtil.get());
+        record.setFilename("filename");
+        record.setRealPath("realpath");
+        record.setFileSize("fileSize");
+        record.setFileSizeDesc("fileSizeDesc");
+        record.setFilePreviewContentType("");
+        record.setIdentifier(identifier);
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        fileService.save(record);
+
+        SecUploadFileContext context = new SecUploadFileContext();
+        context.setIdentifier(identifier);
+        context.setFilename("filename");
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+
+        boolean result = userFileService.secUpload(context);
+        Assert.isTrue(result);
+    }
+
+    /**
+     * 校验秒传文件失败
+     */
+    @Test
+    public void testSecUploadFail() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        String identifier = "123456789";
+
+        File record = new File();
+        record.setFileId(IdUtil.get());
+        record.setFilename("filename");
+        record.setRealPath("realpath");
+        record.setFileSize("fileSize");
+        record.setFileSizeDesc("fileSizeDesc");
+        record.setFilePreviewContentType("");
+        record.setIdentifier(identifier);
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        fileService.save(record);
+
+        SecUploadFileContext context = new SecUploadFileContext();
+        context.setIdentifier(identifier + "_update");
+        context.setFilename("filename");
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+
+        boolean result = userFileService.secUpload(context);
+        Assert.isFalse(result);
     }
 
 

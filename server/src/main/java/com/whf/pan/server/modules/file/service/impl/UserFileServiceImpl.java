@@ -2,19 +2,21 @@ package com.whf.pan.server.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
+import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.event.file.DeleteFileEvent;
 import com.whf.pan.server.modules.file.constants.FileConstants;
-import com.whf.pan.server.modules.file.context.CreateFolderContext;
-import com.whf.pan.server.modules.file.context.DeleteFileContext;
-import com.whf.pan.server.modules.file.context.QueryFileListContext;
-import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
+import com.whf.pan.server.modules.file.context.*;
+import com.whf.pan.server.modules.file.entity.File;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
+import com.whf.pan.server.modules.file.enums.FileTypeEnum;
 import com.whf.pan.server.modules.file.enums.FolderFlagEnum;
+import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.mapper.UserFileMapper;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
@@ -25,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -39,9 +42,8 @@ import java.util.stream.Collectors;
 @Service(value = "userFileService")
 public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService, ApplicationContextAware {
 
-//    @Autowired
-//    @Qualifier(value = "defaultStreamProducer")
-//    private IStreamProducer producer;
+    @Resource
+    private IFileService fileService;
 
 
 
@@ -397,6 +399,62 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
+
+    /*************************************************************************文件秒传*****************************************************************************************/
+
+
+
+    /**
+     * 文件秒传功能
+     * <p>
+     * 1、判断用户之前是否上传过该文件
+     * 2、如果上传过该文件，只需要生成一个该文件和当前用户在指定文件夹下面的关联关系即可
+     *
+     * @param context
+     * @return true 代表用户之前上传过相同文件并成功挂在了关联关系 false 用户没有上传过该文件，请手动执行上传逻辑
+     */
+    @Override
+    public boolean secUpload(SecUploadFileContext context) {
+    //        List<File> fileList = getFileListByUserIdAndIdentifier(context.getUserId(), context.getIdentifier());
+    //        if (CollectionUtils.isNotEmpty(fileList)) {
+    //            File record = fileList.get(Constants.ZERO_INT);
+    //            saveUserFile(context.getParentId(),
+    //                    context.getFilename(),
+    //                    FolderFlagEnum.NO,
+    //                    FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())),
+    //                    record.getFileId(),
+    //                    context.getUserId(),
+    //                    record.getFileSizeDesc());
+    //            return true;
+    //        }
+    //        return false;
+        File record= getFileListByUserIdAndIdentifier(context.getUserId(), context.getIdentifier());
+        if (Objects.isNull(record)){
+            return false;
+        }
+        saveUserFile(context.getParentId(),
+                context.getFilename(),
+                FolderFlagEnum.NO,
+                FileTypeEnum.getFileTypeCode(FileUtil.getFileSuffix(context.getFilename())),
+                record.getFileId(),
+                context.getUserId(),
+                record.getFileSizeDesc());
+        return true;
+    }
+
+    private File getFileListByUserIdAndIdentifier(Long userId, String identifier) {
+        QueryWrapper wrapper = Wrappers.query();
+        wrapper.eq("create_user",userId);
+        wrapper.eq("identifier",identifier);
+        // 我们不能保证在高并发的情况下文件唯一标识全局唯一，所以有可能会查出多条数据
+        List<File> records = fileService.list(wrapper);
+        if (CollectionUtils.isEmpty(records)){
+            return null;
+        }
+        //返回第一条记录
+        return records.get(Constants.ZERO_INT);
+    }
+
 }
 
 

@@ -10,11 +10,13 @@ import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.context.DeleteFileContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
+import com.whf.pan.server.modules.file.context.SecUploadFileContext;
 import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.CreateFolderPO;
 import com.whf.pan.server.modules.file.po.DeleteFilePO;
 import com.whf.pan.server.modules.file.po.UpdateFilenamePO;
+import com.whf.pan.server.modules.file.po.SecUploadFilePO;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
@@ -115,6 +117,24 @@ public class FileController {
         context.setFileIdList(fileIdList);
         userFileService.deleteFile(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "文件秒传",
+            notes = "该接口提供了文件秒传的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/sec-upload")
+    public R secUpload(@Validated @RequestBody SecUploadFilePO secUploadFilePO) {
+
+        SecUploadFileContext context = fileConverter.secUploadFilePOTOSecUploadFileContext(secUploadFilePO);
+
+        boolean success = userFileService.secUpload(context);
+        if (success) {
+            return R.success();
+        }
+        return R.fail("文件唯一标识不存在，请手动执行文件上传的操作！");
     }
 
 }
