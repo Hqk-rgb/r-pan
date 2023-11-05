@@ -1,6 +1,11 @@
 package com.whf.pan.storage.engine.core;
 
 
+import com.whf.pan.storage.engine.core.context.DeleteFileContext;
+import com.whf.pan.storage.engine.core.context.StoreFileContext;
+
+import java.io.IOException;
+
 /**
  * @author whf
  * @className StorageEngine
@@ -10,5 +15,20 @@ package com.whf.pan.storage.engine.core;
  * @date 2023/11/5 11:50
  */
 public interface StorageEngine {
+    /**
+     * 存储物理文件
+     *
+     * @param context
+     * @throws IOException
+     */
+    void store(StoreFileContext context) throws IOException;
+
+    /**
+     * 删除物理文件
+     *
+     * @param context
+     * @throws IOException
+     */
+    void delete(DeleteFileContext context) throws IOException;
 
 }

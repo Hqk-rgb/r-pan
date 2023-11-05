@@ -8,6 +8,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ import javax.validation.constraints.NotBlank;
 //@Validated
 @EnableTransactionManagement
 @MapperScan(basePackages = Constants.BASE_COMPONENT_SCAN_PATH+".server.modules.**.mapper")
+@ComponentScan(basePackages = "com.whf.pan")
 public class PanLauncher {
     public static void main(String[] args) {
         SpringApplication.run(PanLauncher.class);

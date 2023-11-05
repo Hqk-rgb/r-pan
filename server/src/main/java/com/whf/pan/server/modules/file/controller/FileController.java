@@ -11,12 +11,14 @@ import com.whf.pan.server.modules.file.context.DeleteFileContext;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
 import com.whf.pan.server.modules.file.context.SecUploadFileContext;
+import com.whf.pan.server.modules.file.context.FileUploadContext;
 import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.CreateFolderPO;
 import com.whf.pan.server.modules.file.po.DeleteFilePO;
 import com.whf.pan.server.modules.file.po.UpdateFilenamePO;
 import com.whf.pan.server.modules.file.po.SecUploadFilePO;
+import com.whf.pan.server.modules.file.po.FileUploadPO;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
@@ -137,4 +139,16 @@ public class FileController {
         return R.fail("文件唯一标识不存在，请手动执行文件上传的操作！");
     }
 
+    @ApiOperation(
+            value = "单文件上传",
+            notes = "该接口提供了单文件上传的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/upload")
+    public R upload(@Validated FileUploadPO fileUploadPO) {
+        FileUploadContext context = fileConverter.fileUploadPOTOFileUploadContext(fileUploadPO);
+        userFileService.upload(context);
+        return R.success();
+    }
 }

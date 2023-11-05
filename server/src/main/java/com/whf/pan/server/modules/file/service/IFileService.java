@@ -1,7 +1,10 @@
 package com.whf.pan.server.modules.file.service;
 
+import com.whf.pan.server.modules.file.context.FileSaveContext;
 import com.whf.pan.server.modules.file.entity.File;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author 26570
@@ -9,5 +12,20 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2023-10-28 15:45:30
 */
 public interface IFileService extends IService<File> {
+
+    /**
+     * 根据条件查询用户的实际文件列表
+     *
+     * @param context
+     * @return
+     */
+//    List<File> getFileList(QueryRealFileListContext context);
+
+    /**
+     * 上传单文件并保存实体记录
+     *
+     * @param context
+     */
+    void saveFile(FileSaveContext context);
 
 }

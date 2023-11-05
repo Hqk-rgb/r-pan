@@ -29,7 +29,7 @@ public class UserFileVO implements Serializable {
     private Long parentId;
 
     @ApiModelProperty(value = "文件名称")
-    private String fileName;
+    private String filename;
 
     @ApiModelProperty(value = "文件大小描述")
     private String fileSizeDesc;

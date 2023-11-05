@@ -2,7 +2,7 @@ package com.whf.pan.server.modules.log.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.whf.pan.server.modules.log.entity.ErrorLog;
-import com.whf.pan.server.modules.log.service.ErrorLogService;
+import com.whf.pan.server.modules.log.service.IErrorLogService;
 import com.whf.pan.server.modules.log.mapper.ErrorLogMapper;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 */
 @Service
 public class ErrorLogServiceImpl extends ServiceImpl<ErrorLogMapper, ErrorLog>
-    implements ErrorLogService{
+    implements IErrorLogService {
 
 }
 
