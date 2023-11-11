@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -14,6 +16,7 @@ import lombok.Data;
  */
 @TableName(value ="r_pan_file_chunk")
 @Data
+@Builder
 public class FileChunk implements Serializable {
     /**
      * 主键
@@ -31,31 +34,31 @@ public class FileChunk implements Serializable {
      * 分片真实的存储路径
      */
     @TableField(value = "real_path")
-    private String real_path;
+    private String realPath;
 
     /**
      * 分片编号
      */
     @TableField(value = "chunk_number")
-    private Integer chunk_number;
+    private Integer chunkNumber;
 
     /**
      * 过期时间
      */
     @TableField(value = "expiration_time")
-    private Date expiration_time;
+    private Date expirationTime;
 
     /**
      * 创建人
      */
     @TableField(value = "create_user")
-    private Long create_user;
+    private Long createUser;
 
     /**
      * 创建时间
      */
     @TableField(value = "create_time")
-    private Date create_time;
+    private Date createTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -2,6 +2,7 @@ package com.whf.pan.server.modules.file.converter;
 
 import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.po.*;
+import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -35,5 +36,13 @@ public interface FileConverter {
 
     @Mapping(target = "record", ignore = true)
     FileSaveContext fileUploadContextTOFileSaveContext(FileUploadContext context);
+
+    @Mapping(target = "userId", expression = "java(com.whf.pan.server.common.utils.UserIdUtil.get())")
+    FileChunkUploadContext fileChunkUploadPOTOFileChunkUploadContext(FileChunkUploadPO fileChunkUploadPO);
+
+    FileChunkSaveContext fileChunkUploadContextTOFileChunkSaveContext(FileChunkUploadContext context);
+
+    @Mapping(target = "realPath",ignore = true)
+    StoreFileChunkContext fileChunkSaveContextTOStoreFileChunkContext(FileChunkSaveContext context);
 
 }

@@ -6,20 +6,12 @@ import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
-import com.whf.pan.server.modules.file.context.CreateFolderContext;
-import com.whf.pan.server.modules.file.context.DeleteFileContext;
-import com.whf.pan.server.modules.file.context.QueryFileListContext;
-import com.whf.pan.server.modules.file.context.UpdateFilenameContext;
-import com.whf.pan.server.modules.file.context.SecUploadFileContext;
-import com.whf.pan.server.modules.file.context.FileUploadContext;
+import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
-import com.whf.pan.server.modules.file.po.CreateFolderPO;
-import com.whf.pan.server.modules.file.po.DeleteFilePO;
-import com.whf.pan.server.modules.file.po.UpdateFilenamePO;
-import com.whf.pan.server.modules.file.po.SecUploadFilePO;
-import com.whf.pan.server.modules.file.po.FileUploadPO;
+import com.whf.pan.server.modules.file.po.*;
 import com.whf.pan.server.modules.file.service.IUserFileService;
+import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -150,5 +142,18 @@ public class FileController {
         FileUploadContext context = fileConverter.fileUploadPOTOFileUploadContext(fileUploadPO);
         userFileService.upload(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "文件分片上传",
+            notes = "该接口提供了文件分片上传的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/chunk-upload")
+    public R<FileChunkUploadVO> chunkUpload(@Validated FileChunkUploadPO fileChunkUploadPO) {
+        FileChunkUploadContext context = fileConverter.fileChunkUploadPOTOFileChunkUploadContext(fileChunkUploadPO);
+        FileChunkUploadVO vo = userFileService.chunkUpload(context);
+        return R.data(vo);
     }
 }

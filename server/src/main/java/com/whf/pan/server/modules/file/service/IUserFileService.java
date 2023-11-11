@@ -3,6 +3,7 @@ package com.whf.pan.server.modules.file.service;
 import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 
 import java.util.List;
@@ -62,4 +63,12 @@ public interface IUserFileService extends IService<UserFile> {
      * @param context
      */
     void upload(FileUploadContext context);
+
+    /**
+     * 文件分片上传
+     *
+     * @param context
+     * @return
+     */
+    FileChunkUploadVO chunkUpload(FileChunkUploadContext context);
 }

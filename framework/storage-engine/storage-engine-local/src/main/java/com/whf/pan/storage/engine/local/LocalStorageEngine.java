@@ -3,6 +3,7 @@ package com.whf.pan.storage.engine.local;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.storage.engine.core.AbstractStorageEngine;
 import com.whf.pan.storage.engine.core.context.DeleteFileContext;
+import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
 import com.whf.pan.storage.engine.core.context.StoreFileContext;
 import com.whf.pan.storage.engine.local.config.LocalStorageEngineConfig;
 import org.springframework.stereotype.Component;
@@ -47,4 +48,21 @@ public class LocalStorageEngine extends AbstractStorageEngine {
     protected void doDelete(DeleteFileContext context) throws IOException {
         FileUtil.deleteFiles(context.getRealFilePathList());
     }
+
+    /**
+     * 执行保存文件分片
+     * 下沉到底层去实现
+     *
+     * @param context
+     * @throws IOException
+     */
+    @Override
+    protected void doStoreChunk(StoreFileChunkContext context) throws IOException {
+        String basePath = config.getRootFileChunkPath();
+        String realFilePath = FileUtil.generateStoreFileChunkRealPath(basePath, context.getIdentifier(),context.getChunkNumber());
+        FileUtil.writeStream2File(context.getInputStream(), new File(realFilePath), context.getTotalSize());
+        context.setRealPath(realFilePath);
+    }
+
+
 }

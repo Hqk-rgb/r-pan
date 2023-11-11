@@ -17,9 +17,11 @@ import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.enums.FileTypeEnum;
 import com.whf.pan.server.modules.file.enums.FolderFlagEnum;
+import com.whf.pan.server.modules.file.service.IFileChunkService;
 import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.mapper.UserFileMapper;
+import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.storage.engine.core.StorageEngine;
 import org.apache.commons.collections.CollectionUtils;
@@ -53,6 +55,9 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     private FileConverter fileConverter;
 
     private  ApplicationContext applicationContext;
+
+    @Resource
+    private IFileChunkService fileChunkService;
 
 
 
@@ -503,6 +508,26 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         FileSaveContext fileSaveContext = fileConverter.fileUploadContextTOFileSaveContext(context);
         fileService.saveFile(fileSaveContext);
         context.setRecord(fileSaveContext.getRecord());
+    }
+
+    /*************************************************************************文件分片上传*****************************************************************************************/
+    /**
+     * 文件分片上传
+     * <p>
+     * 1、上传实体文件
+     * 2、保存分片文件记录
+     * 3、校验是否全部分片上传完成
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public FileChunkUploadVO chunkUpload(FileChunkUploadContext context) {
+        FileChunkSaveContext fileChunkSaveContext = fileConverter.fileChunkUploadContextTOFileChunkSaveContext(context);
+        fileChunkService.saveChunkFile(fileChunkSaveContext);
+        FileChunkUploadVO vo = new FileChunkUploadVO();
+        vo.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
+        return vo;
     }
 
 }
