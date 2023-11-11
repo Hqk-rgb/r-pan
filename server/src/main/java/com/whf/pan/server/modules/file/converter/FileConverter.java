@@ -45,4 +45,7 @@ public interface FileConverter {
     @Mapping(target = "realPath",ignore = true)
     StoreFileChunkContext fileChunkSaveContextTOStoreFileChunkContext(FileChunkSaveContext context);
 
+    @Mapping(target = "userId", expression = "java(com.whf.pan.server.common.utils.UserIdUtil.get())")
+    QueryUploadedChunksContext queryUploadedChunksPOTOQueryUploadedChunksContext(QueryUploadedChunksPO queryUploadedChunksPO);
+
 }

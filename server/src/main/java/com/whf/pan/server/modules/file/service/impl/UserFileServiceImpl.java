@@ -22,6 +22,7 @@ import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.mapper.UserFileMapper;
 import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
+import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.storage.engine.core.StorageEngine;
 import org.apache.commons.collections.CollectionUtils;
@@ -530,6 +531,32 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return vo;
     }
 
+    /*************************************************************************查询用户已上传的分片列表**********************************************/
+
+    /**
+     * 查询用户已上传的分片列表
+     * <p>
+     * 1、查询已上传的分片列表
+     * 2、封装返回实体
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public UploadedChunksVO getUploadedChunks(QueryUploadedChunksContext context) {
+        QueryWrapper queryWrapper = Wrappers.query();
+        queryWrapper.select("chunk_number");
+        queryWrapper.eq("identifier", context.getIdentifier());
+        queryWrapper.eq("create_user", context.getUserId());
+        // 过期时间必须晚于（大于）当前时间
+        queryWrapper.gt("expiration_time", new Date());
+
+        List<Integer> uploadedChunks = fileChunkService.listObjs(queryWrapper, value -> (Integer) value);
+
+        UploadedChunksVO vo = new UploadedChunksVO();
+        vo.setUploadedChunks(uploadedChunks);
+        return vo;
+    }
 }
 
 

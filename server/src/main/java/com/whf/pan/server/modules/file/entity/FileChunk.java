@@ -7,8 +7,11 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 
 /**
  * 文件分片信息表
@@ -16,6 +19,8 @@ import lombok.Data;
  */
 @TableName(value ="r_pan_file_chunk")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class FileChunk implements Serializable {
     /**

@@ -12,6 +12,7 @@ import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.*;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
+import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
@@ -154,6 +155,19 @@ public class FileController {
     public R<FileChunkUploadVO> chunkUpload(@Validated FileChunkUploadPO fileChunkUploadPO) {
         FileChunkUploadContext context = fileConverter.fileChunkUploadPOTOFileChunkUploadContext(fileChunkUploadPO);
         FileChunkUploadVO vo = userFileService.chunkUpload(context);
+        return R.data(vo);
+    }
+
+    @ApiOperation(
+            value = "文件分片上传",
+            notes = "该接口提供了文件分片上传的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("file/chunk-upload")
+    public R<UploadedChunksVO> getUploadedChunks(@Validated QueryUploadedChunksPO queryUploadedChunksPO) {
+        QueryUploadedChunksContext context = fileConverter.queryUploadedChunksPOTOQueryUploadedChunksContext(queryUploadedChunksPO);
+        UploadedChunksVO vo = userFileService.getUploadedChunks(context);
         return R.data(vo);
     }
 }

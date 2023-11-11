@@ -4,6 +4,7 @@ import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
+import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 
 import java.util.List;
@@ -71,4 +72,12 @@ public interface IUserFileService extends IService<UserFile> {
      * @return
      */
     FileChunkUploadVO chunkUpload(FileChunkUploadContext context);
+
+    /**
+     * 查询用户已上传的分片列表
+     *
+     * @param context
+     * @return
+     */
+    UploadedChunksVO getUploadedChunks(QueryUploadedChunksContext context);
 }

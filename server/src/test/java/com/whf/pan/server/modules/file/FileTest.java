@@ -1,5 +1,6 @@
 package com.whf.pan.server.modules.file;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import com.google.common.collect.Lists;
 import com.whf.pan.core.exception.BusinessException;
@@ -7,9 +8,12 @@ import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.File;
+import com.whf.pan.server.modules.file.entity.FileChunk;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
+import com.whf.pan.server.modules.file.service.IFileChunkService;
 import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
+import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
@@ -44,7 +48,13 @@ public class FileTest {
     private IUserFileService userFileService;
 
     @Resource
+    private IFileService fileService;
+
+    @Resource
     private IUserService userService;
+
+    @Resource
+    private IFileChunkService fileChunkService;
 
 
     /***************************************************************测试用户查询文件列表成功***********************************************************************/
@@ -294,8 +304,6 @@ public class FileTest {
 
     /**********************************************************************秒传文件********************************************************************************/
 
-    @Resource
-    private IFileService fileService;
 
     /**
      * 校验秒传文件成功
@@ -409,6 +417,38 @@ public class FileTest {
             e.printStackTrace();
         }
         return file;
+    }
+
+
+    /**********************************************************************单文件上传**************************************************************************/
+
+    /**
+     * 测试查询用户已上传的文件分片信息列表成功
+     */
+    @Test
+    public void testQueryUploadedChunksSuccess() {
+        Long userId = register();
+
+        String identifier = "123456789";
+
+        FileChunk record = new FileChunk();
+        record.setId(IdUtil.get());
+        record.setIdentifier(identifier);
+        record.setRealPath("realPath");
+        record.setChunkNumber(1);
+        record.setExpirationTime(DateUtil.offsetDay(new Date(), 1));
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        boolean save = fileChunkService.save(record);
+        Assert.isTrue(save);
+
+        QueryUploadedChunksContext context = new QueryUploadedChunksContext();
+        context.setIdentifier(identifier);
+        context.setUserId(userId);
+
+        UploadedChunksVO vo = userFileService.getUploadedChunks(context);
+        Assert.notNull(vo);
+        Assert.notEmpty(vo.getUploadedChunks());
     }
 
     /**********************************************************************私有方法********************************************************************************/
