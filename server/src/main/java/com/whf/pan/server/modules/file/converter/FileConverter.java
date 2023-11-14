@@ -48,4 +48,9 @@ public interface FileConverter {
     @Mapping(target = "userId", expression = "java(com.whf.pan.server.common.utils.UserIdUtil.get())")
     QueryUploadedChunksContext queryUploadedChunksPOTOQueryUploadedChunksContext(QueryUploadedChunksPO queryUploadedChunksPO);
 
+    @Mapping(target = "userId", expression = "java(com.whf.pan.server.common.utils.UserIdUtil.get())")
+    @Mapping(target = "parentId", expression = "java(com.whf.pan.core.utils.IdUtil.decrypt(fileChunkMergePO.getParentId()))")
+    FileChunkMergeContext fileChunkMergePOTOFileChunkMergeContext(FileChunkMergePO fileChunkMergePO);
+
+    FileChunkMergeAndSaveContext fileChunkMergeContextTOFileChunkMergeAndSaveContext(FileChunkMergeContext context);
 }

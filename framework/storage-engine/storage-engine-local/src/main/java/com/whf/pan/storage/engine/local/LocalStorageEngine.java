@@ -3,6 +3,7 @@ package com.whf.pan.storage.engine.local;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.storage.engine.core.AbstractStorageEngine;
 import com.whf.pan.storage.engine.core.context.DeleteFileContext;
+import com.whf.pan.storage.engine.core.context.MergeFileContext;
 import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
 import com.whf.pan.storage.engine.core.context.StoreFileContext;
 import com.whf.pan.storage.engine.local.config.LocalStorageEngineConfig;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * @author whf
@@ -61,6 +64,25 @@ public class LocalStorageEngine extends AbstractStorageEngine {
         String basePath = config.getRootFileChunkPath();
         String realFilePath = FileUtil.generateStoreFileChunkRealPath(basePath, context.getIdentifier(),context.getChunkNumber());
         FileUtil.writeStream2File(context.getInputStream(), new File(realFilePath), context.getTotalSize());
+        context.setRealPath(realFilePath);
+    }
+
+    /**
+     * 执行文件分片合并的动作
+     * 下沉到子类实现
+     *
+     * @param context
+     */
+    @Override
+    protected void doMergeFile(MergeFileContext context) throws IOException {
+        String basePath = config.getRootFilePath();
+        String realFilePath = FileUtil.generateStoreFileRealPath(basePath, context.getFilename());
+        FileUtil.createFile(new File(realFilePath));
+        List<String> chunkPaths = context.getRealPathList();
+        for (String chunkPath : chunkPaths) {
+            FileUtil.appendWrite(Paths.get(realFilePath), new File(chunkPath).toPath());
+        }
+        FileUtil.deleteFiles(chunkPaths);
         context.setRealPath(realFilePath);
     }
 

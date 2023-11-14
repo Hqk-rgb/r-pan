@@ -80,4 +80,11 @@ public interface IUserFileService extends IService<UserFile> {
      * @return
      */
     UploadedChunksVO getUploadedChunks(QueryUploadedChunksContext context);
+
+    /**
+     * 文件分片合并
+     *
+     * @param context
+     */
+    void mergeFile(FileChunkMergeContext context);
 }
