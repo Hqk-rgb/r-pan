@@ -2,14 +2,12 @@ package com.whf.pan.storage.engine.local;
 
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.storage.engine.core.AbstractStorageEngine;
-import com.whf.pan.storage.engine.core.context.DeleteFileContext;
-import com.whf.pan.storage.engine.core.context.MergeFileContext;
-import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
-import com.whf.pan.storage.engine.core.context.StoreFileContext;
+import com.whf.pan.storage.engine.core.context.*;
 import com.whf.pan.storage.engine.local.config.LocalStorageEngineConfig;
 import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -84,6 +82,18 @@ public class LocalStorageEngine extends AbstractStorageEngine {
         }
         FileUtil.deleteFiles(chunkPaths);
         context.setRealPath(realFilePath);
+    }
+
+    /**
+     * 读取文件内容并写入到输出流中
+     * 下沉到子类去实现
+     *
+     * @param context
+     */
+    @Override
+    protected void doReadFile(ReadFileContext context) throws IOException {
+        File file = new File(context.getRealPath());
+        FileUtil.writeFile2OutputStream(new FileInputStream(file), context.getOutputStream(), file.length());
     }
 
 

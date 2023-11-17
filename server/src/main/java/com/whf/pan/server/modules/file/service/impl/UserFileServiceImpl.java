@@ -9,6 +9,7 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.event.file.DeleteFileEvent;
+import com.whf.pan.server.common.utils.HttpUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.converter.FileConverter;
@@ -25,16 +26,21 @@ import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
 import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.storage.engine.core.StorageEngine;
+import com.whf.pan.storage.engine.core.context.ReadFileContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +65,9 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Resource
     private IFileChunkService fileChunkService;
+
+    @Resource
+    private StorageEngine storageEngine;
 
 
 
@@ -582,6 +591,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                 context.getRecord().getFileSizeDesc());
     }
 
+
     /**
      * 合并文件分片并保存物理文件记录
      *
@@ -591,6 +601,128 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         FileChunkMergeAndSaveContext fileChunkMergeAndSaveContext = fileConverter.fileChunkMergeContextTOFileChunkMergeAndSaveContext(context);
         fileService.mergeFileChunkAndSaveFile(fileChunkMergeAndSaveContext);
         context.setRecord(fileChunkMergeAndSaveContext.getRecord());
+    }
+
+    /***********************************************************************文件下载**********************************************/
+
+
+    /**
+     * 文件下载
+     * <p>
+     * 1、参数校验：校验文件是否存在，文件是否属于该用户
+     * 2、校验该文件是不是一个文件夹
+     * 3、执行下载的动作
+     *
+     * @param context
+     */
+    @Override
+    public void download(FileDownloadContext context) {
+        UserFile record = getById(context.getFileId());
+        checkOperatePermission(record, context.getUserId());
+        if (checkIsFolder(record)) {
+            throw new BusinessException("文件夹暂不支持下载");
+        }
+        doDownload(record, context.getResponse());
+    }
+
+    /**
+     * 校验用户的操作权限
+     * <p>
+     * 1、文件记录必须存在
+     * 2、文件记录的创建者必须是该登录用户
+     *
+     * @param record
+     * @param userId
+     */
+    private void checkOperatePermission(UserFile record, Long userId) {
+        if (Objects.isNull(record)) {
+            throw new BusinessException("当前文件记录不存在");
+        }
+        if (!record.getUserId().equals(userId)) {
+            throw new BusinessException("您没有该文件的操作权限");
+        }
+    }
+
+    /**
+     * 检查当前文件记录是不是一个文件夹
+     *
+     * @param record
+     * @return
+     */
+    private boolean checkIsFolder(UserFile record) {
+        if (Objects.isNull(record)) {
+            throw new BusinessException("当前文件记录不存在");
+        }
+        return FolderFlagEnum.YES.getCode().equals(record.getFolderFlag());
+    }
+
+    /**
+     * 执行文件下载的动作
+     * <p>
+     * 1、查询文件的真实存储路径
+     * 2、添加跨域的公共响应头
+     * 3、拼装下载文件的名称、长度等等响应信息
+     * 4、委托文件存储引擎去读取文件内容到响应的输出流中
+     *
+     * @param record
+     * @param response
+     */
+    private void doDownload(UserFile record, HttpServletResponse response) {
+        File realFileRecord = fileService.getById(record.getRealFileId());
+        if (Objects.isNull(realFileRecord)) {
+            throw new BusinessException("当前的文件记录不存在");
+        }
+        addCommonResponseHeader(response, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        addDownloadAttribute(response, record, realFileRecord);
+        realFile2OutputStream(realFileRecord.getRealPath(), response);
+    }
+    /**
+     * 添加公共的文件读取响应头
+     *
+     * @param response
+     * @param contentTypeValue
+     */
+    private void addCommonResponseHeader(HttpServletResponse response, String contentTypeValue) {
+        response.reset();
+        HttpUtil.addCorsResponseHeaders(response);
+        response.addHeader(FileConstants.CONTENT_TYPE_STR, contentTypeValue);
+        response.setContentType(contentTypeValue);
+    }
+
+    /**
+     * 添加文件下载的属性信息
+     *
+     * @param response
+     * @param record
+     * @param realFileRecord
+     */
+    private void addDownloadAttribute(HttpServletResponse response, UserFile record, File realFileRecord) {
+        try {
+            response.addHeader(FileConstants.CONTENT_DISPOSITION_STR,
+                    FileConstants.CONTENT_DISPOSITION_VALUE_PREFIX_STR + new String(record.getFilename().getBytes(FileConstants.GB2312_STR), FileConstants.IOS_8859_1_STR));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new BusinessException("文件下载失败");
+        }
+        response.setContentLengthLong(Long.valueOf(realFileRecord.getFileSize()));
+    }
+
+    /**
+     * 委托文件存储引擎去读取文件内容并写入到输出流中
+     *
+     * @param realPath
+     * @param response
+     */
+    private void realFile2OutputStream(String realPath, HttpServletResponse response) {
+        try {
+            ReadFileContext context = new ReadFileContext();
+            context.setRealPath(realPath);
+            context.setOutputStream(response.getOutputStream());
+            storageEngine.realFile(context);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new BusinessException("文件下载失败");
+        }
     }
 }
 

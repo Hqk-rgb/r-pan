@@ -1,10 +1,7 @@
 package com.whf.pan.storage.engine.core;
 
 
-import com.whf.pan.storage.engine.core.context.DeleteFileContext;
-import com.whf.pan.storage.engine.core.context.MergeFileContext;
-import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
-import com.whf.pan.storage.engine.core.context.StoreFileContext;
+import com.whf.pan.storage.engine.core.context.*;
 
 import java.io.IOException;
 
@@ -48,5 +45,13 @@ public interface StorageEngine {
      * @throws IOException
      */
     void mergeFile(MergeFileContext context) throws IOException;
+
+    /**
+     * 读取文件内容写入到输出流中
+     *
+     * @param context
+     * @throws IOException
+     */
+    void realFile(ReadFileContext context) throws IOException;
 
 }
