@@ -199,4 +199,21 @@ public class FileController {
         context.setUserId(UserIdUtil.get());
         userFileService.download(context);
     }
+
+    @ApiOperation(
+            value = "文件预览",
+            notes = "该接口提供了文件预览的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_OCTET_STREAM_VALUE
+    )
+    @GetMapping("file/preview")
+    public void preview(@NotBlank(message = "文件ID不能为空") @RequestParam(value = "fileId", required = false) String fileId,
+                        HttpServletResponse response) {
+        FilePreviewContext context = new FilePreviewContext();
+        context.setFileId(IdUtil.decrypt(fileId));
+        context.setResponse(response);
+        context.setUserId(UserIdUtil.get());
+        userFileService.preview(context);
+    }
+
 }

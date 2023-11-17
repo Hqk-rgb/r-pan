@@ -724,6 +724,45 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             throw new BusinessException("文件下载失败");
         }
     }
+
+    /***********************************************************************文件预览**********************************************/
+
+
+    /**
+     * 文件预览
+     * 1、参数校验：校验文件是否存在，文件是否属于该用户
+     * 2、校验该文件是不是一个文件夹
+     * 3、执行预览的动作
+     *
+     * @param context
+     */
+    @Override
+    public void preview(FilePreviewContext context) {
+        UserFile record = getById(context.getFileId());
+        checkOperatePermission(record, context.getUserId());
+        if (checkIsFolder(record)) {
+            throw new BusinessException("文件夹暂不支持下载");
+        }
+        doPreview(record, context.getResponse());
+    }
+
+    /**
+     * 执行文件预览的动作
+     * 1、查询文件的真实存储路径
+     * 2、添加跨域的公共响应头
+     * 3、委托文件存储引擎去读取文件内容到响应的输出流中
+     *
+     * @param record
+     * @param response
+     */
+    private void doPreview(UserFile record, HttpServletResponse response) {
+        File realFileRecord = fileService.getById(record.getRealFileId());
+        if (Objects.isNull(realFileRecord)) {
+            throw new BusinessException("当前的文件记录不存在");
+        }
+        addCommonResponseHeader(response, realFileRecord.getFilePreviewContentType());
+        realFile2OutputStream(realFileRecord.getRealPath(), response);
+    }
 }
 
 
