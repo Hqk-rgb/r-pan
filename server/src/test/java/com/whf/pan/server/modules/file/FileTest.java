@@ -579,6 +579,71 @@ public class FileTest {
         userFileService.transfer(transferFileContext);
     }
 
+    /**********************************************************************文件复制********************************************************************************/
+
+    /**
+     * 测试文件复制成功
+     */
+    @Test
+    public void testCopyFileSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        context.setFolderName("folder-name-2");
+        Long folder2 = userFileService.createFolder(context);
+        Assert.notNull(folder2);
+
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setTargetParentId(folder1);
+        copyFileContext.setFileIdList(Lists.newArrayList(folder2));
+        copyFileContext.setUserId(userId);
+        userFileService.copy(copyFileContext);
+
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setParentId(folder1);
+        queryFileListContext.setUserId(userId);
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<UserFileVO> records = userFileService.getFileList(queryFileListContext);
+        Assert.notEmpty(records);
+    }
+
+    /**
+     * 测试文件复制失败，目标文件夹是要转移的文件列表中的文件夹或者是其子文件夹
+     */
+    @Test(expected = BusinessException.class)
+    public void testCopyFileFail() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        context.setParentId(folder1);
+        context.setFolderName("folder-name-2");
+        Long folder2 = userFileService.createFolder(context);
+        Assert.notNull(folder2);
+
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setTargetParentId(folder2);
+        copyFileContext.setFileIdList(Lists.newArrayList(folder1));
+        copyFileContext.setUserId(userId);
+        userFileService.copy(copyFileContext);
+    }
+
+
 
     /**********************************************************************私有方法********************************************************************************/
 

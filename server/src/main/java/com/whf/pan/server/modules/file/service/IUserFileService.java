@@ -117,4 +117,11 @@ public interface IUserFileService extends IService<UserFile> {
      * @param context
      */
     void transfer(TransferFileContext context);
+
+    /**
+     * 文件复制
+     *
+     * @param context
+     */
+    void copy(CopyFileContext context);
 }
