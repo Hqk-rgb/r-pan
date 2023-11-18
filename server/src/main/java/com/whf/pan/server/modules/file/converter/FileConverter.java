@@ -1,7 +1,9 @@
 package com.whf.pan.server.modules.file.converter;
 
 import com.whf.pan.server.modules.file.context.*;
+import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.file.po.*;
+import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
 import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -53,4 +55,11 @@ public interface FileConverter {
     FileChunkMergeContext fileChunkMergePOTOFileChunkMergeContext(FileChunkMergePO fileChunkMergePO);
 
     FileChunkMergeAndSaveContext fileChunkMergeContextTOFileChunkMergeAndSaveContext(FileChunkMergeContext context);
+
+    @Mapping(target = "label", source = "record.filename")
+    @Mapping(target = "id", source = "record.fileId")
+    @Mapping(target = "children", expression = "java(com.google.common.collect.Lists.newArrayList())")
+    FolderTreeNodeVO userFileTOFolderTreeNodeVO(UserFile record);
+
+
 }

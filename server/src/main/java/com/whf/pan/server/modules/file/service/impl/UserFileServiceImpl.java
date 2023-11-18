@@ -1,9 +1,11 @@
 package com.whf.pan.server.modules.file.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.FileUtil;
@@ -23,6 +25,7 @@ import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.mapper.UserFileMapper;
 import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
+import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
 import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.storage.engine.core.StorageEngine;
@@ -41,10 +44,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -763,6 +763,169 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         addCommonResponseHeader(response, realFileRecord.getFilePreviewContentType());
         realFile2OutputStream(realFileRecord.getRealPath(), response);
     }
+
+    /***********************************************************************查询用户的文件夹树**********************************************/
+
+
+    /**
+     * 查询用户的文件夹树
+     * <p>
+     * 1、查询出该用户的所有文件夹列表
+     * 2、在内存中拼装文件夹树
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<FolderTreeNodeVO> getFolderTree(QueryFolderTreeContext context) {
+        List<UserFile> folderRecords = queryFolderRecords(context.getUserId());
+        List<FolderTreeNodeVO> result = assembleFolderTreeNodeVOList(folderRecords);
+        return result;
+    }
+
+    /**
+     * 查询用户所有有效的文件夹信息
+     *
+     * @param userId
+     * @return
+     */
+    private List<UserFile> queryFolderRecords(Long userId) {
+        LambdaQueryWrapper<UserFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserFile::getUserId, userId)
+                .eq(UserFile::getFolderFlag, FolderFlagEnum.YES.getCode())
+                .eq(UserFile::getDelFlag, DelFlagEnum.NO.getCode());
+        return list(wrapper);
+//        QueryWrapper queryWrapper = Wrappers.query();
+//        queryWrapper.eq("user_id", userId);
+//        queryWrapper.eq("folder_flag", FolderFlagEnum.YES.getCode());
+//        queryWrapper.eq("del_flag", DelFlagEnum.NO.getCode());
+//        return list(queryWrapper);
+    }
+
+    /**
+     * 拼装文件夹树列表
+     *
+     * @param folderRecords
+     * @return
+     */
+    private List<FolderTreeNodeVO> assembleFolderTreeNodeVOList(List<UserFile> folderRecords) {
+        if (CollectionUtils.isEmpty(folderRecords)) {
+            return Lists.newArrayList();
+        }
+        List<FolderTreeNodeVO> mappedFolderTreeNodeVOList = folderRecords.stream().map(fileConverter::userFileTOFolderTreeNodeVO).collect(Collectors.toList());
+        Map<Long, List<FolderTreeNodeVO>> mappedFolderTreeNodeVOMap = mappedFolderTreeNodeVOList.stream().collect(Collectors.groupingBy(FolderTreeNodeVO::getParentId));
+        for (FolderTreeNodeVO node : mappedFolderTreeNodeVOList) {
+            List<FolderTreeNodeVO> children = mappedFolderTreeNodeVOMap.get(node.getId());
+            if (CollectionUtils.isNotEmpty(children)) {
+                node.getChildren().addAll(children);
+            }
+        }
+        return mappedFolderTreeNodeVOList.stream().filter(node -> Objects.equals(node.getParentId(), FileConstants.TOP_PARENT_ID)).collect(Collectors.toList());
+    }
+
+    /***********************************************************************文件转移**********************************************/
+
+    /**
+     * 文件转移
+     * <p>
+     * 1、权限校验
+     * 2、执行工作
+     *
+     * @param context
+     */
+    @Override
+    public void transfer(TransferFileContext context) {
+        checkTransferCondition(context);
+        doTransfer(context);
+    }
+
+    /**
+     * 文件转移的条件校验
+     * <p>
+     * 1、目标文件必须是一个文件夹
+     * 2、选中的要转移的文件列表中不能含有目标文件夹以及其子文件夹
+     *
+     * @param context
+     */
+    private void checkTransferCondition(TransferFileContext context) {
+        Long targetParentId = context.getTargetParentId();
+        if (!checkIsFolder(getById(targetParentId))) {
+            throw new BusinessException("目标文件不是一个文件夹");
+        }
+        List<Long> fileIdList = context.getFileIdList();
+        List<UserFile> prepareRecords = listByIds(fileIdList);
+        context.setPrepareRecords(prepareRecords);
+        if (checkIsChildFolder(prepareRecords, targetParentId, context.getUserId())) {
+            throw new BusinessException("目标文件夹ID不能是选中文件列表的文件夹ID或其子文件夹ID");
+        }
+    }
+
+
+        /**
+         * 执行文件转移的动作
+         *
+         * @param context
+         */
+        private void doTransfer(TransferFileContext context) {
+            List<UserFile> prepareRecords = context.getPrepareRecords();
+            prepareRecords.stream().forEach(record -> {
+                record.setParentId(context.getTargetParentId());
+                record.setUserId(context.getUserId());
+                record.setCreateUser(context.getUserId());
+                record.setCreateTime(new Date());
+                record.setUpdateUser(context.getUserId());
+                record.setUpdateTime(new Date());
+                handleDuplicateFilename(record);
+            });
+            if (!updateBatchById(prepareRecords)) {
+                throw new BusinessException("文件转移失败");
+            }
+        }
+
+    /**
+     * 校验目标文件夹ID是都是要操作的文件记录的文件夹ID以及其子文件夹ID
+     * <p>
+     * 1、如果要操作的文件列表中没有文件夹，那就直接返回false
+     * 2、拼装文件夹ID以及所有子文件夹ID，判断存在即可
+     *
+     * @param prepareRecords
+     * @param targetParentId
+     * @param userId
+     * @return
+     */
+    private boolean checkIsChildFolder(List<UserFile> prepareRecords, Long targetParentId, Long userId) {
+        prepareRecords = prepareRecords.stream().filter(record -> Objects.equals(record.getFolderFlag(), FolderFlagEnum.YES.getCode())).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(prepareRecords)) {
+            return false;
+        }
+        List<UserFile> folderRecords = queryFolderRecords(userId);
+        Map<Long, List<UserFile>> folderRecordMap = folderRecords.stream().collect(Collectors.groupingBy(UserFile::getParentId));
+        List<UserFile> unavailableFolderRecords = Lists.newArrayList();
+        unavailableFolderRecords.addAll(prepareRecords);
+        prepareRecords.stream().forEach(record -> findAllChildFolderRecords(unavailableFolderRecords, folderRecordMap, record));
+        List<Long> unavailableFolderRecordIds = unavailableFolderRecords.stream().map(UserFile::getFileId).collect(Collectors.toList());
+        return unavailableFolderRecordIds.contains(targetParentId);
+    }
+
+    /**
+     * 查找文件夹的所有子文件夹记录
+     *
+     * @param unavailableFolderRecords
+     * @param folderRecordMap
+     * @param record
+     */
+    private void findAllChildFolderRecords(List<UserFile> unavailableFolderRecords, Map<Long, List<UserFile>> folderRecordMap, UserFile record) {
+        if (Objects.isNull(record)) {
+            return;
+        }
+        List<UserFile> childFolderRecords = folderRecordMap.get(record.getFileId());
+        if (CollectionUtils.isEmpty(childFolderRecords)) {
+            return;
+        }
+        unavailableFolderRecords.addAll(childFolderRecords);
+        childFolderRecords.stream().forEach(childRecord -> findAllChildFolderRecords(unavailableFolderRecords, folderRecordMap, childRecord));
+    }
+
 }
 
 

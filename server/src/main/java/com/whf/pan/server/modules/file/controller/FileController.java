@@ -12,6 +12,7 @@ import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.*;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
+import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
 import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 import io.swagger.annotations.ApiOperation;
@@ -216,4 +217,36 @@ public class FileController {
         userFileService.preview(context);
     }
 
+    @ApiOperation(
+            value = "查询文件夹树",
+            notes = "该接口提供了查询文件夹树的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("file/folder/tree")
+    public R<List<FolderTreeNodeVO>> getFolderTree() {
+        QueryFolderTreeContext context = new QueryFolderTreeContext();
+        context.setUserId(UserIdUtil.get());
+        List<FolderTreeNodeVO> result = userFileService.getFolderTree(context);
+        return R.data(result);
+    }
+
+    @ApiOperation(
+            value = "文件转移",
+            notes = "该接口提供了文件转移的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/transfer")
+    public R transfer(@Validated @RequestBody TransferFilePO transferFilePO) {
+        String fileIds = transferFilePO.getFileIds();
+        String targetParentId = transferFilePO.getTargetParentId();
+        List<Long> fileIdList = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(fileIds).stream().map(IdUtil::decrypt).collect(Collectors.toList());
+        TransferFileContext context = new TransferFileContext();
+        context.setFileIdList(fileIdList);
+        context.setTargetParentId(IdUtil.decrypt(targetParentId));
+        context.setUserId(UserIdUtil.get());
+        userFileService.transfer(context);
+        return R.success();
+    }
 }

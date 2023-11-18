@@ -4,6 +4,7 @@ import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
+import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
 import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
 
@@ -101,4 +102,19 @@ public interface IUserFileService extends IService<UserFile> {
      * @param context
      */
     void preview(FilePreviewContext context);
+
+    /**
+     * 查询用户的文件夹树
+     *
+     * @param context
+     * @return
+     */
+    List<FolderTreeNodeVO> getFolderTree(QueryFolderTreeContext context);
+
+    /**
+     * 文件转移
+     *
+     * @param context
+     */
+    void transfer(TransferFileContext context);
 }
