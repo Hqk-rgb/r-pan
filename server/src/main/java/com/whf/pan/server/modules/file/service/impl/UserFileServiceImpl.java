@@ -11,6 +11,7 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.event.file.DeleteFileEvent;
+import com.whf.pan.server.common.stream.event.search.UserSearchEvent;
 import com.whf.pan.server.common.utils.HttpUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.*;
@@ -24,16 +25,12 @@ import com.whf.pan.server.modules.file.service.IFileChunkService;
 import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.mapper.UserFileMapper;
-import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
-import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
-import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
-import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.file.vo.*;
 import com.whf.pan.storage.engine.core.StorageEngine;
 import com.whf.pan.storage.engine.core.context.ReadFileContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
@@ -1028,6 +1025,64 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 //        queryWrapper.eq("parent_id", parentId);
 //        queryWrapper.eq("del_flag", DelFlagEnum.NO.getCode());
 //        return list(queryWrapper);
+    }
+
+
+    /***********************************************************************文件列表搜索**********************************************/
+
+    /**
+     * 文件列表搜索
+     * <p>
+     * 1、执行文件搜索
+     * 2、拼装文件的父文件夹名称
+     * 3、执行文件搜索后的后置动作
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<FileSearchResultVO> search(FileSearchContext context) {
+        List<FileSearchResultVO> result = doSearch(context);
+        fillParentFilename(result);
+        afterSearch(context);
+        return result;
+    }
+
+    /**
+     * 搜索文件列表
+     *
+     * @param context
+     * @return
+     */
+    private List<FileSearchResultVO> doSearch(FileSearchContext context) {
+        return baseMapper.searchFile(context);
+    }
+
+    /**
+     * 填充文件列表的父文件名称
+     *
+     * @param result
+     */
+    private void fillParentFilename(List<FileSearchResultVO> result) {
+        if (CollectionUtils.isEmpty(result)) {
+            return;
+        }
+        List<Long> parentIdList = result.stream().map(FileSearchResultVO::getParentId).collect(Collectors.toList());
+        List<UserFile> parentRecords = listByIds(parentIdList);
+        Map<Long, String> fileId2filenameMap = parentRecords.stream().collect(Collectors.toMap(UserFile::getFileId, UserFile::getFilename));
+        result.stream().forEach(vo -> vo.setParentFilename(fileId2filenameMap.get(vo.getParentId())));
+    }
+
+    /**
+     * 搜索的后置操作
+     * <p>
+     * 1、发布文件搜索的事件
+     *
+     * @param context
+     */
+    private void afterSearch(FileSearchContext context) {
+        UserSearchEvent event = new UserSearchEvent(this,context.getKeyword(), context.getUserId());
+        applicationContext.publishEvent(event);
     }
 
 }

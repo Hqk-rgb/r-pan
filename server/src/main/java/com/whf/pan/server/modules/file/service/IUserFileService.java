@@ -3,10 +3,7 @@ package com.whf.pan.server.modules.file.service;
 import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
-import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
-import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
-import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.file.vo.*;
 
 import java.util.List;
 
@@ -124,4 +121,12 @@ public interface IUserFileService extends IService<UserFile> {
      * @param context
      */
     void copy(CopyFileContext context);
+
+    /**
+     * 文件列表搜索
+     *
+     * @param context
+     * @return
+     */
+    List<FileSearchResultVO> search(FileSearchContext context);
 }

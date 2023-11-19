@@ -14,10 +14,7 @@ import com.whf.pan.server.modules.file.enums.MergeFlagEnum;
 import com.whf.pan.server.modules.file.service.IFileChunkService;
 import com.whf.pan.server.modules.file.service.IFileService;
 import com.whf.pan.server.modules.file.service.IUserFileService;
-import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
-import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
-import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
-import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.file.vo.*;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.service.IUserService;
@@ -643,6 +640,34 @@ public class FileTest {
         userFileService.copy(copyFileContext);
     }
 
+    /**********************************************************************文件搜索********************************************************************************/
+
+    /**
+     * 测试文件搜索成功
+     */
+    @Test
+    public void testSearchSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long folder1 = userFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        FileSearchContext fileSearchContext = new FileSearchContext();
+        fileSearchContext.setUserId(userId);
+        fileSearchContext.setKeyword("folder-name");
+        List<FileSearchResultVO> result = userFileService.search(fileSearchContext);
+        Assert.notEmpty(result);
+
+        fileSearchContext.setKeyword("name-1");
+        result = userFileService.search(fileSearchContext);
+        Assert.isTrue(CollectionUtils.isEmpty(result));
+    }
 
 
     /**********************************************************************私有方法********************************************************************************/

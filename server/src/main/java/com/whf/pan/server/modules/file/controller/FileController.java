@@ -11,11 +11,9 @@ import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.enums.DelFlagEnum;
 import com.whf.pan.server.modules.file.po.*;
 import com.whf.pan.server.modules.file.service.IUserFileService;
-import com.whf.pan.server.modules.file.vo.FileChunkUploadVO;
-import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
-import com.whf.pan.server.modules.file.vo.UploadedChunksVO;
-import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.file.vo.*;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -268,5 +266,25 @@ public class FileController {
         context.setUserId(UserIdUtil.get());
         userFileService.copy(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "文件搜索",
+            notes = "该接口提供了文件搜索的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("file/search")
+    public R<List<FileSearchResultVO>> search(@Validated FileSearchPO fileSearchPO) {
+        FileSearchContext context = new FileSearchContext();
+        context.setKeyword(fileSearchPO.getKeyword());
+        context.setUserId(UserIdUtil.get());
+        String fileTypes = fileSearchPO.getFileTypes();
+        if (StringUtils.isNotBlank(fileTypes) && !Objects.equals(FileConstants.ALL_FILE_TYPE, fileTypes)) {
+            List<Integer> fileTypeArray = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(fileTypes).stream().map(Integer::valueOf).collect(Collectors.toList());
+            context.setFileTypeArray(fileTypeArray);
+        }
+        List<FileSearchResultVO> result = userFileService.search(context);
+        return R.data(result);
     }
 }
