@@ -50,3 +50,13 @@ logging:
   level:
     root: INFO
 
+com:
+  whf:
+    pan:
+      storage:
+        engine:
+          fdfs:
+            connect-timeout: 600
+            tracker-list:
+              - 115.159.69.196:22122
+            group: group1

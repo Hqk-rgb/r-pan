@@ -176,7 +176,7 @@ public class FileController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
-    @GetMapping("file/merge")
+    @PostMapping("file/merge")
     public R mergeFile(@Validated @RequestBody FileChunkMergePO fileChunkMergePO) {
         FileChunkMergeContext context = fileConverter.fileChunkMergePOTOFileChunkMergeContext(fileChunkMergePO);
         userFileService.mergeFile(context);

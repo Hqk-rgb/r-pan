@@ -21,7 +21,6 @@ import com.whf.pan.storage.engine.core.StorageEngine;
 import com.whf.pan.storage.engine.core.context.DeleteFileContext;
 import com.whf.pan.storage.engine.core.context.MergeFileContext;
 import com.whf.pan.storage.engine.core.context.StoreFileContext;
-import com.whf.pan.storage.engine.local.LocalStorageEngine;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

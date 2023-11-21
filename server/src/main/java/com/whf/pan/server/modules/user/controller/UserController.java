@@ -8,14 +8,12 @@ import com.whf.pan.server.modules.user.context.*;
 import com.whf.pan.server.modules.user.converter.UserConverter;
 import com.whf.pan.server.modules.user.po.*;
 import com.whf.pan.server.modules.user.service.IUserService;
+import com.whf.pan.server.modules.user.vo.UserInfoVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -130,5 +128,17 @@ public class UserController {
         changePasswordContext.setUserId(UserIdUtil.get());
         userService.changePassword(changePasswordContext);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "查询登录用户的基本信息",
+            notes = "该接口提供了查询登录用户的基本信息的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/")
+    public R<UserInfoVO> info() {
+        UserInfoVO userInfoVO = userService.info(UserIdUtil.get());
+        return R.data(userInfoVO);
     }
 }
