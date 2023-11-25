@@ -49,14 +49,20 @@ logging:
   file: D:\logs\${spring.application.name}\${spring.application.name}.log
   level:
     root: INFO
-
-com:
-  whf:
-    pan:
-      storage:
-        engine:
-          fdfs:
-            connect-timeout: 600
-            tracker-list:
-              - 115.159.69.196:22122
-            group: group1
+# 修改 ip 地址
+#com:
+#  whf:
+#    pan:
+#      storage:
+#        engine:
+##          fdfs:
+##            connect-timeout: 600
+##            tracker-list:
+##              - ip:端口
+##            group: group1
+#          oss:
+#            bucket-name: king-hf-bucket
+#            endpoint: oss-cn-shanghai.aliyuncs.com
+#            access-key-id: LTAI5tPr81ofKDqjFNPcCRqM
+#            access-key-secret: e9rsuHOJunSIjhRiZomOxIkiETcEt4
+#            auto-create-bucket: true
