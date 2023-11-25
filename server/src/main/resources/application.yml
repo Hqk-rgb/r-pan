@@ -61,8 +61,8 @@ logging:
 ##              - ip:端口
 ##            group: group1
 #          oss:
-#            bucket-name: king-hf-bucket
-#            endpoint: oss-cn-shanghai.aliyuncs.com
-#            access-key-id: LTAI5tPr81ofKDqjFNPcCRqM
-#            access-key-secret: e9rsuHOJunSIjhRiZomOxIkiETcEt4
+#            bucket-name: xxxxxxxxx
+#            endpoint: xxxxxxxxx
+#            access-key-id: xxxxxxxxx
+#            access-key-secret: xxxxxxxxx
 #            auto-create-bucket: true
