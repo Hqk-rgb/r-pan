@@ -6,18 +6,17 @@ import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.recycle.context.DeleteContext;
 import com.whf.pan.server.modules.recycle.context.QueryRecycleFileListContext;
 import com.whf.pan.server.modules.recycle.context.RestoreContext;
+import com.whf.pan.server.modules.recycle.po.DeletePO;
 import com.whf.pan.server.modules.recycle.po.RestorePO;
 import com.whf.pan.server.modules.recycle.service.IRecycleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -67,6 +66,25 @@ public class RecycleController {
         context.setFileIdList(fileIdList);
 
         recycleService.restore(context);
+        return R.success();
+    }
+
+    @ApiOperation(
+            value = "删除的文件批量彻底删除",
+            notes = "该接口提供了删除的文件批量彻底删除的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("recycle")
+    public R delete(@Validated @RequestBody DeletePO deletePO) {
+        DeleteContext context = new DeleteContext();
+        context.setUserId(UserIdUtil.get());
+
+        String fileIds = deletePO.getFileIds();
+        List<Long> fileIdList = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(fileIds).stream().map(IdUtil::decrypt).collect(Collectors.toList());
+        context.setFileIdList(fileIdList);
+
+        recycleService.delete(context);
         return R.success();
     }
 }

@@ -8,6 +8,7 @@ import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.context.DeleteFileContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.recycle.context.DeleteContext;
 import com.whf.pan.server.modules.recycle.context.QueryRecycleFileListContext;
 import com.whf.pan.server.modules.recycle.context.RestoreContext;
 import com.whf.pan.server.modules.recycle.service.IRecycleService;
@@ -219,6 +220,70 @@ public class RecycleTest {
         restoreContext.setUserId(userId);
         restoreContext.setFileIdList(Lists.newArrayList(fileId1, fileId2));
         recycleService.restore(restoreContext);
+    }
+
+    /**
+     * 测试文件删除成功
+     */
+    @Test
+    public void testFileDeleteSuccess() {
+
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        // 创建一个文件夹
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        // 删掉该文件夹
+        DeleteFileContext deleteFileContext = new DeleteFileContext();
+        List<Long> fileIdList = Lists.newArrayList();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+
+        // 文件彻底删除
+        DeleteContext deleteContext = new DeleteContext();
+        deleteContext.setUserId(userId);
+        deleteContext.setFileIdList(Lists.newArrayList(fileId));
+        recycleService.delete(deleteContext);
+    }
+
+    /**
+     * 测试文件删除失败-错误的用户ID
+     */
+    @Test(expected = BusinessException.class)
+    public void testFileDeleteFailByWrongUserId() {
+
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        // 创建一个文件夹
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        // 删掉该文件夹
+        DeleteFileContext deleteFileContext = new DeleteFileContext();
+        List<Long> fileIdList = Lists.newArrayList();
+        fileIdList.add(fileId);
+        deleteFileContext.setFileIdList(fileIdList);
+        deleteFileContext.setUserId(userId);
+        userFileService.deleteFile(deleteFileContext);
+
+        // 文件彻底删除
+        DeleteContext deleteContext = new DeleteContext();
+        deleteContext.setUserId(userId + 1);
+        deleteContext.setFileIdList(Lists.newArrayList(fileId));
+        recycleService.delete(deleteContext);
     }
 
     /************************************************private************************************************/

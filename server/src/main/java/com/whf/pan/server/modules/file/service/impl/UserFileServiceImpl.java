@@ -1114,6 +1114,68 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return result;
     }
 
+
+    /***********************************************************************递归查询所有的子文件信息**********************************************/
+
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param records
+     * @return
+     */
+    @Override
+    public List<UserFile> findAllFileRecords(List<UserFile> records) {
+        List<UserFile> result = Lists.newArrayList(records);
+        if (CollectionUtils.isEmpty(result)) {
+            return result;
+        }
+        long folderCount = result.stream().filter(record -> Objects.equals(record.getFolderFlag(), FolderFlagEnum.YES.getCode())).count();
+        if (folderCount == 0) {
+            return result;
+        }
+        records.stream().forEach(record -> doFindAllChildRecords(result, record));
+        return result;
+    }
+
+    /**
+     * 递归查询所有的子文件列表
+     * 忽略是否删除的标识
+     *
+     * @param result
+     * @param record
+     */
+    private void doFindAllChildRecords(List<UserFile> result, UserFile record) {
+        if (Objects.isNull(record)) {
+            return;
+        }
+        if (!checkIsFolder(record)) {
+            return;
+        }
+        List<UserFile> childRecords = findChildRecordsIgnoreDelFlag(record.getFileId());
+        if (CollectionUtils.isEmpty(childRecords)) {
+            return;
+        }
+        result.addAll(childRecords);
+        childRecords.stream()
+                .filter(childRecord -> FolderFlagEnum.YES.getCode().equals(childRecord.getFolderFlag()))
+                .forEach(childRecord -> doFindAllChildRecords(result, childRecord));
+    }
+
+    /**
+     * 查询文件夹下面的文件记录，忽略删除标识
+     *
+     * @param fileId
+     * @return
+     */
+    private List<UserFile> findChildRecordsIgnoreDelFlag(Long fileId) {
+        LambdaQueryWrapper<UserFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserFile::getParentId, fileId);
+//        QueryWrapper queryWrapper = Wrappers.query();
+//        queryWrapper.eq("parent_id", fileId);
+        List<UserFile> childRecords = list(wrapper);
+        return childRecords;
+    }
+
 }
 
 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
+import com.whf.pan.server.common.event.file.FilePhysicalDeleteEvent;
 import com.whf.pan.server.common.event.file.FileRestoreEvent;
 import com.whf.pan.server.modules.file.context.QueryFileListContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
@@ -165,6 +166,80 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
         FileRestoreEvent event = new FileRestoreEvent(this,context.getFileIdList());
         applicationContext.publishEvent(event);
         //producer.sendMessage(PanChannels.FILE_RESTORE_OUTPUT, event);
+    }
+
+    /**
+     * 文件彻底删除
+     * <p>
+     * 1、校验操作权限
+     * 2、递归查找所有子文件
+     * 3、执行文件删除的动作
+     * 4、删除后的后置动作
+     *
+     * @param context
+     */
+    @Override
+    public void delete(DeleteContext context) {
+        checkFileDeletePermission(context);
+        findAllFileRecords(context);
+        doDelete(context);
+        afterDelete(context);
+    }
+
+    /**
+     * 校验文件删除的操作权限
+     *
+     * @param context
+     */
+    private void checkFileDeletePermission(DeleteContext context) {
+        LambdaQueryWrapper<UserFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserFile::getUserId, context.getUserId())
+                .in(UserFile::getFileId, context.getFileIdList());
+//        QueryWrapper queryWrapper = Wrappers.query();
+//        queryWrapper.eq("user_id", context.getUserId());
+//        queryWrapper.in("file_id", context.getFileIdList());
+        List<UserFile> records = userFileService.list(wrapper);
+        if (CollectionUtils.isEmpty(records) || records.size() != context.getFileIdList().size()) {
+            throw new BusinessException("您无权删除该文件");
+        }
+        context.setRecords(records);
+    }
+
+    /**
+     * 递归查询所有的子文件
+     *
+     * @param context
+     */
+    private void findAllFileRecords(DeleteContext context) {
+        List<UserFile> records = context.getRecords();
+        List<UserFile> allRecords = userFileService.findAllFileRecords(records);
+        context.setAllRecords(allRecords);
+    }
+
+    /**
+     * 执行文件删除的动作
+     *
+     * @param context
+     */
+    private void doDelete(DeleteContext context) {
+        List<UserFile> allRecords = context.getAllRecords();
+        List<Long> fileIdList = allRecords.stream().map(UserFile::getFileId).collect(Collectors.toList());
+        if (!userFileService.removeByIds(fileIdList)) {
+            throw new BusinessException("文件删除失败");
+        }
+    }
+
+    /**
+     * 文件彻底删除之后的后置函数
+     * <p>
+     * 1、发送一个文件彻底删除的事件
+     *
+     * @param context
+     */
+    private void afterDelete(DeleteContext context) {
+        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(this,context.getAllRecords());
+        applicationContext.publishEvent(event);
+        // producer.sendMessage(PanChannels.PHYSICAL_DELETE_FILE_OUTPUT, event);
     }
 
 }

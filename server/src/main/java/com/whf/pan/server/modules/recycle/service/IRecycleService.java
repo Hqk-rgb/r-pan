@@ -1,6 +1,7 @@
 package com.whf.pan.server.modules.recycle.service;
 
 import com.whf.pan.server.modules.file.vo.UserFileVO;
+import com.whf.pan.server.modules.recycle.context.DeleteContext;
 import com.whf.pan.server.modules.recycle.context.QueryRecycleFileListContext;
 import com.whf.pan.server.modules.recycle.context.RestoreContext;
 import org.springframework.stereotype.Service;
@@ -30,4 +31,11 @@ public interface IRecycleService {
      * @param context
      */
     void restore(RestoreContext context);
+
+    /**
+     * 文件彻底删除
+     *
+     * @param context
+     */
+    void delete(DeleteContext context);
 }
