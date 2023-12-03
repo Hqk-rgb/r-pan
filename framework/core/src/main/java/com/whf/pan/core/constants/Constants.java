@@ -34,27 +34,27 @@ public interface Constants {
     /**
      * 公用0L
      */
-    long ZERO_LONG = 0L;
+    Long ZERO_LONG = 0L;
 
     /**
      * 公用 0 数字
      */
-    int ZERO_INT = 0;
+    Integer ZERO_INT = 0;
 
     /**
      * 公用 1 数字
      */
-    int ONE_INT = 1;
+    Integer ONE_INT = 1;
 
     /**
      * 公用 2 数字
      */
-    int TWO_INT = 2;
+    Integer TWO_INT = 2;
 
     /**
      * 公用 -1 数字
      */
-    int MINUS_ONE_INT = -1;
+    Integer MINUS_ONE_INT = -1;
 
     /**
      * 公用true字符串
