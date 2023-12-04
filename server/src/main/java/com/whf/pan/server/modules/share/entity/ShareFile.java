@@ -15,6 +15,10 @@ import lombok.Data;
 @TableName(value ="r_pan_share_file")
 @Data
 public class ShareFile implements Serializable {
+
+
+    @TableField(exist = false)
+    private static final long serialVersionUID = 4014529298254337127L;
     /**
      * 主键
      */
@@ -25,26 +29,25 @@ public class ShareFile implements Serializable {
      * 分享id
      */
     @TableField(value = "share_id")
-    private Long share_id;
+    private Long shareId;
 
     /**
      * 文件记录ID
      */
     @TableField(value = "file_id")
-    private Long file_id;
+    private Long fileId;
 
     /**
      * 分享创建人
      */
     @TableField(value = "create_user")
-    private Long create_user;
+    private Long createUser;
 
     /**
      * 创建时间
      */
     @TableField(value = "create_time")
-    private Date create_time;
+    private Date createTime;
 
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+
 }

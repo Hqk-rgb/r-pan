@@ -2,6 +2,7 @@ package com.whf.pan.server.common.config;
 
 import com.whf.pan.core.constants.Constants;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,9 @@ import org.springframework.stereotype.Component;
 @Data
 public class ServerConfig {
 
+    @Value("${server.port}")
+    private Integer serverPort;
+
     /**
      * 文件分片的过期天数
      */
@@ -25,6 +29,7 @@ public class ServerConfig {
     /**
      * 分享链接的前缀
      */
-    private String sharePrefix = "http://127.0.0.1:8080/share/";
+    // private String sharePrefix = "http://127.0.0.1:8080/share/";
+    private String sharePrefix = "http://127.0.0.1:"+ serverPort +"/share/";
 
 }
