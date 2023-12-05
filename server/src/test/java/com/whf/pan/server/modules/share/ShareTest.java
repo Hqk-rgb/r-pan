@@ -7,13 +7,11 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
-import com.whf.pan.server.modules.share.context.CancelShareContext;
-import com.whf.pan.server.modules.share.context.CheckShareCodeContext;
-import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
-import com.whf.pan.server.modules.share.context.QueryShareListContext;
+import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
 import com.whf.pan.server.modules.share.enums.ShareTypeEnum;
 import com.whf.pan.server.modules.share.service.IShareService;
+import com.whf.pan.server.modules.share.vo.ShareDetailVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
@@ -212,6 +210,39 @@ public class ShareTest {
         checkShareCodeContext.setShareCode(vo.getShareCode() + "_change");
         String token = shareService.checkShareCode(checkShareCodeContext);
         Assert.notBlank(token);
+    }
+
+
+    /**
+     * 校验查询分享详情成功
+     */
+    @Test
+    public void queryShareDetailSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        ShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        QueryShareDetailContext queryShareDetailContext = new QueryShareDetailContext();
+        queryShareDetailContext.setShareId(vo.getShareId());
+        ShareDetailVO shareDetailVO = shareService.detail(queryShareDetailContext);
+        Assert.notNull(shareDetailVO);
+        System.out.println(shareDetailVO);
     }
 
 

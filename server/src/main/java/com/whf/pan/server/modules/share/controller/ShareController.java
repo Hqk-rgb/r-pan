@@ -5,16 +5,16 @@ import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.annotation.LoginIgnore;
+import com.whf.pan.server.common.annotation.NeedShareCode;
+import com.whf.pan.server.common.utils.ShareIdUtil;
 import com.whf.pan.server.common.utils.UserIdUtil;
-import com.whf.pan.server.modules.share.context.CancelShareContext;
-import com.whf.pan.server.modules.share.context.CheckShareCodeContext;
-import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
-import com.whf.pan.server.modules.share.context.QueryShareListContext;
+import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.converter.ShareConverter;
 import com.whf.pan.server.modules.share.po.CancelSharePO;
 import com.whf.pan.server.modules.share.po.CheckShareCodePO;
 import com.whf.pan.server.modules.share.po.CreateShareUrlPO;
 import com.whf.pan.server.modules.share.service.IShareService;
+import com.whf.pan.server.modules.share.vo.ShareDetailVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 import io.swagger.annotations.Api;
@@ -114,6 +114,22 @@ public class ShareController {
 
         String token = shareService.checkShareCode(context);
         return R.data(token);
+    }
+
+    @ApiOperation(
+            value = "查询分享的详情",
+            notes = "该接口提供了查询分享的详情的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @NeedShareCode
+    @GetMapping("share")
+    public R<ShareDetailVO> detail() {
+        QueryShareDetailContext context = new QueryShareDetailContext();
+        context.setShareId(ShareIdUtil.get());
+        ShareDetailVO vo = shareService.detail(context);
+        return R.data(vo);
     }
 
 }

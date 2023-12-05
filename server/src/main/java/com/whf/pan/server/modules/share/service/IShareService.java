@@ -3,6 +3,7 @@ package com.whf.pan.server.modules.share.service;
 import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.entity.Share;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.whf.pan.server.modules.share.vo.ShareDetailVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 
@@ -46,5 +47,13 @@ public interface IShareService extends IService<Share> {
      * @return
      */
     String checkShareCode(CheckShareCodeContext context);
+
+    /**
+     * 查询分享的详情
+     *
+     * @param context
+     * @return
+     */
+    ShareDetailVO detail(QueryShareDetailContext context);
 
 }

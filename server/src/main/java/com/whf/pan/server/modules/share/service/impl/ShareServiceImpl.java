@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.google.common.collect.Lists;
+import com.whf.pan.server.modules.share.vo.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.hash.BloomFilter;
 import com.whf.pan.core.constants.Constants;
@@ -13,6 +15,10 @@ import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.core.utils.JwtUtil;
 import com.whf.pan.core.utils.UUIDUtil;
 import com.whf.pan.server.common.config.ServerConfig;
+import com.whf.pan.server.modules.file.context.QueryFileListContext;
+import com.whf.pan.server.modules.file.enums.DelFlagEnum;
+import com.whf.pan.server.modules.file.service.IUserFileService;
+import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.server.modules.share.constants.ShareConstants;
 import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.entity.Share;
@@ -22,12 +28,14 @@ import com.whf.pan.server.modules.share.enums.ShareStatusEnum;
 import com.whf.pan.server.modules.share.service.IShareFileService;
 import com.whf.pan.server.modules.share.service.IShareService;
 import com.whf.pan.server.modules.share.mapper.ShareMapper;
+import com.whf.pan.server.modules.share.vo.ShareDetailVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
+import com.whf.pan.server.modules.user.entity.User;
+import com.whf.pan.server.modules.user.service.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +63,12 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
 
     @Resource
     private IShareFileService shareFileService;
+
+    @Resource
+    private IUserService userService;
+
+    @Resource
+    private IUserFileService userFileService;
 
 
     // @Resource
@@ -337,6 +351,127 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         Share record = context.getRecord();
         String token = JwtUtil.generateToken(UUIDUtil.getUUID(), ShareConstants.SHARE_ID, record.getShareId(), ShareConstants.ONE_HOUR_LONG);
         return token;
+    }
+
+    /******************************************************************查看分享详情************************************************************/
+
+
+    /**
+     * 查询分享的详情
+     * <p>
+     * 1、校验分享的状态
+     * 2、初始化分享实体
+     * 3、查询分享的主体信息
+     * 4、查询分享的文件列表
+     * 5、查询分享者的信息
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public ShareDetailVO detail(QueryShareDetailContext context) {
+        Share record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        initShareVO(context);
+        assembleMainShareInfo(context);
+        assembleShareFilesInfo(context);
+        assembleShareUserInfo(context);
+        return context.getVo();
+    }
+
+    /**
+     * 初始化文件详情的VO实体
+     *
+     * @param context
+     */
+    private void initShareVO(QueryShareDetailContext context) {
+        ShareDetailVO vo = new ShareDetailVO();
+        context.setVo(vo);
+    }
+
+    /**
+     * 查询分享的主体信息
+     *
+     * @param context
+     */
+    private void assembleMainShareInfo(QueryShareDetailContext context) {
+        Share record = context.getRecord();
+        ShareDetailVO vo = context.getVo();
+        vo.setShareId(record.getShareId());
+        vo.setShareName(record.getShareName());
+        vo.setCreateTime(record.getCreateTime());
+        vo.setShareDay(record.getShareDay());
+        vo.setShareEndTime(record.getShareEndTime());
+    }
+
+    /**
+     * 查询分享对应的文件列表
+     * <p>
+     * 1、查询分享对应的文件ID集合
+     * 2、根据文件ID来查询文件列表信息
+     *
+     * @param context
+     */
+    private void assembleShareFilesInfo(QueryShareDetailContext context) {
+        List<Long> fileIdList = getShareFileIdList(context.getShareId());
+
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setUserId(context.getRecord().getCreateUser());
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        queryFileListContext.setFileIdList(fileIdList);
+
+        List<UserFileVO> rPanUserFileVOList = userFileService.getFileList(queryFileListContext);
+        context.getVo().setRPanUserFileVOList(rPanUserFileVOList);
+    }
+
+    /**
+     * 查询分享对应的文件ID集合
+     *
+     * @param shareId
+     * @return
+     */
+    private List<Long> getShareFileIdList(Long shareId) {
+        if (Objects.isNull(shareId)) {
+            return Lists.newArrayList();
+        }
+        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(ShareFile::getFileId)
+                .eq(ShareFile::getShareId, shareId);
+//        QueryWrapper queryWrapper = Wrappers.query();
+//        queryWrapper.select("file_id");
+//        queryWrapper.eq("share_id", shareId);
+        List<Long> fileIdList = shareFileService.listObjs(wrapper, value -> (Long) value);
+        return fileIdList;
+    }
+
+    /**
+     * 查询分享者的信息
+     *
+     * @param context
+     */
+    private void assembleShareUserInfo(QueryShareDetailContext context) {
+        User record = userService.getById(context.getRecord().getCreateUser());
+        if (Objects.isNull(record)) {
+            throw new BusinessException("用户信息查询失败");
+        }
+        ShareUserInfoVO shareUserInfoVO = new ShareUserInfoVO();
+
+        shareUserInfoVO.setUserId(record.getUserId());
+        shareUserInfoVO.setUsername(encryptUsername(record.getUsername()));
+
+        context.getVo().setShareUserInfoVO(shareUserInfoVO);
+    }
+
+    /**
+     * 加密用户名称
+     *
+     * @param username
+     * @return
+     */
+    private String encryptUsername(String username) {
+        StringBuffer stringBuffer = new StringBuffer(username);
+        stringBuffer.replace(Constants.TWO_INT, username.length() - Constants.TWO_INT, Constants.COMMON_ENCRYPT_STR);
+        return stringBuffer.toString();
     }
 
 }
