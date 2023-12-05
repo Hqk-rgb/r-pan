@@ -4,12 +4,15 @@ import com.google.common.base.Splitter;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
+import com.whf.pan.server.common.annotation.LoginIgnore;
 import com.whf.pan.server.common.utils.UserIdUtil;
 import com.whf.pan.server.modules.share.context.CancelShareContext;
+import com.whf.pan.server.modules.share.context.CheckShareCodeContext;
 import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
 import com.whf.pan.server.modules.share.context.QueryShareListContext;
 import com.whf.pan.server.modules.share.converter.ShareConverter;
 import com.whf.pan.server.modules.share.po.CancelSharePO;
+import com.whf.pan.server.modules.share.po.CheckShareCodePO;
 import com.whf.pan.server.modules.share.po.CreateShareUrlPO;
 import com.whf.pan.server.modules.share.service.IShareService;
 import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
@@ -93,6 +96,24 @@ public class ShareController {
 
         shareService.cancelShare(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "校验分享码",
+            notes = "该接口提供了校验分享码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("share/code/check")
+    public R<String> checkShareCode(@Validated @RequestBody CheckShareCodePO checkShareCodePO) {
+        CheckShareCodeContext context = new CheckShareCodeContext();
+
+        context.setShareId(IdUtil.decrypt(checkShareCodePO.getShareId()));
+        context.setShareCode(checkShareCodePO.getShareCode());
+
+        String token = shareService.checkShareCode(context);
+        return R.data(token);
     }
 
 }

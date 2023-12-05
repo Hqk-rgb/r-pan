@@ -3,10 +3,12 @@ package com.whf.pan.server.modules.share;
 
 import cn.hutool.core.lang.Assert;
 import com.google.common.collect.Lists;
+import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
 import com.whf.pan.server.modules.share.context.CancelShareContext;
+import com.whf.pan.server.modules.share.context.CheckShareCodeContext;
 import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
 import com.whf.pan.server.modules.share.context.QueryShareListContext;
 import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
@@ -145,6 +147,71 @@ public class ShareTest {
 
         result = shareService.getShares(queryShareListContext);
         Assert.isTrue(CollectionUtils.isEmpty(result));
+    }
+
+
+    /**
+     * 校验分享码成功
+     */
+    @Test
+    public void checkShareCodeSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        ShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareId(vo.getShareId());
+        checkShareCodeContext.setShareCode(vo.getShareCode());
+        String token = shareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
+    }
+
+    /**
+     * 校验分享码失败
+     */
+    @Test(expected = BusinessException.class)
+    public void checkShareCodeFail() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        ShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        CheckShareCodeContext checkShareCodeContext = new CheckShareCodeContext();
+        checkShareCodeContext.setShareId(vo.getShareId());
+        checkShareCodeContext.setShareCode(vo.getShareCode() + "_change");
+        String token = shareService.checkShareCode(checkShareCodeContext);
+        Assert.notBlank(token);
     }
 
 

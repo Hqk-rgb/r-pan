@@ -8,12 +8,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.hash.BloomFilter;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
+import com.whf.pan.core.response.ResponseCode;
 import com.whf.pan.core.utils.IdUtil;
+import com.whf.pan.core.utils.JwtUtil;
+import com.whf.pan.core.utils.UUIDUtil;
 import com.whf.pan.server.common.config.ServerConfig;
-import com.whf.pan.server.modules.share.context.CancelShareContext;
-import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
-import com.whf.pan.server.modules.share.context.QueryShareListContext;
-import com.whf.pan.server.modules.share.context.SaveShareFilesContext;
+import com.whf.pan.server.modules.share.constants.ShareConstants;
+import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.entity.Share;
 import com.whf.pan.server.modules.share.entity.ShareFile;
 import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
@@ -263,6 +264,79 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         if (!shareFileService.remove(wrapper)) {
             throw new BusinessException("取消分享失败");
         }
+    }
+
+    /******************************************************************校验分享码************************************************************/
+
+
+    /**
+     * 校验分享码
+     * <p>
+     * 1、检查分享的状态是不是正常
+     * 2、校验分享的分享码是不是正确
+     * 3、生成一个短时间的分享token 返回给上游
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public String checkShareCode(CheckShareCodeContext context) {
+        Share record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        doCheckShareCode(context);
+        return generateShareToken(context);
+    }
+
+    /**
+     * 检查分享的状态是不是正常
+     *
+     * @param shareId
+     * @return
+     */
+    private Share checkShareStatus(Long shareId) {
+        Share record = getById(shareId);
+
+        if (Objects.isNull(record)) {
+            throw new BusinessException(ResponseCode.SHARE_CANCELLED);
+        }
+
+        if (Objects.equals(ShareStatusEnum.FILE_DELETED.getCode(), record.getShareStatus())) {
+            throw new BusinessException(ResponseCode.SHARE_FILE_MISS);
+        }
+
+        if (Objects.equals(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode(), record.getShareDayType())) {
+            return record;
+        }
+
+        if (record.getShareEndTime().before(new Date())) {
+            throw new BusinessException(ResponseCode.SHARE_EXPIRE);
+        }
+
+        return record;
+    }
+
+    /**
+     * 校验分享码是不是正确
+     *
+     * @param context
+     */
+    private void doCheckShareCode(CheckShareCodeContext context) {
+        Share record = context.getRecord();
+        if (!Objects.equals(context.getShareCode(), record.getShareCode())) {
+            throw new BusinessException("分享码错误");
+        }
+    }
+
+    /**
+     * 生成一个短期的分享token
+     *
+     * @param context
+     * @return
+     */
+    private String generateShareToken(CheckShareCodeContext context) {
+        Share record = context.getRecord();
+        String token = JwtUtil.generateToken(UUIDUtil.getUUID(), ShareConstants.SHARE_ID, record.getShareId(), ShareConstants.ONE_HOUR_LONG);
+        return token;
     }
 
 }
