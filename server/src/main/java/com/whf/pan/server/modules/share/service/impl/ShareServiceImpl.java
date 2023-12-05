@@ -1,22 +1,30 @@
 package com.whf.pan.server.modules.share.service.impl;
 
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.hash.BloomFilter;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.server.common.config.ServerConfig;
+import com.whf.pan.server.modules.share.context.CancelShareContext;
 import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
+import com.whf.pan.server.modules.share.context.QueryShareListContext;
 import com.whf.pan.server.modules.share.context.SaveShareFilesContext;
 import com.whf.pan.server.modules.share.entity.Share;
+import com.whf.pan.server.modules.share.entity.ShareFile;
 import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
 import com.whf.pan.server.modules.share.enums.ShareStatusEnum;
 import com.whf.pan.server.modules.share.service.IShareFileService;
 import com.whf.pan.server.modules.share.service.IShareService;
 import com.whf.pan.server.modules.share.mapper.ShareMapper;
+import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.net.URLEncoder;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -174,6 +183,87 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
 //        }
     }
 
+
+    /******************************************************************查询用户的分享列表************************************************************/
+
+    /**
+     * 查询用户的分享列表
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<ShareUrlListVO> getShares(QueryShareListContext context) {
+        return baseMapper.selectShareVOListByUserId(context.getUserId());
+    }
+
+    /******************************************************************取消分享链接************************************************************/
+
+
+    /**
+     * 取消分享链接
+     * <p>
+     * 1、校验用户操作权限
+     * 2、删除对应的分享记录
+     * 3、删除对应的分享文件关联关系记录
+     *
+     * @param context
+     */
+    @Transactional(rollbackFor = BusinessException.class)
+    @Override
+    public void cancelShare(CancelShareContext context) {
+        checkUserCancelSharePermission(context);
+        doCancelShare(context);
+        doCancelShareFiles(context);
+    }
+
+    /**
+     * 检查用户是否拥有取消对应分享链接的权限
+     *
+     * @param context
+     */
+    private void checkUserCancelSharePermission(CancelShareContext context) {
+        List<Long> shareIdList = context.getShareIdList();
+        Long userId = context.getUserId();
+        List<Share> records = listByIds(shareIdList);
+        if (CollectionUtils.isEmpty(records)) {
+            throw new BusinessException("您无权限操作取消分享的动作");
+        }
+        for (Share record : records) {
+            if (!Objects.equals(userId, record.getCreateUser())) {
+                throw new BusinessException("您无权限操作取消分享的动作");
+            }
+        }
+    }
+
+    /**
+     * 执行取消文件分享的动作
+     *
+     * @param context
+     */
+    private void doCancelShare(CancelShareContext context) {
+        List<Long> shareIdList = context.getShareIdList();
+        if (!removeByIds(shareIdList)) {
+            throw new BusinessException("取消分享失败");
+        }
+    }
+
+    /**
+     * 取消文件和分享的关联关系数据
+     *
+     * @param context
+     */
+    private void doCancelShareFiles(CancelShareContext context) {
+        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(ShareFile::getShareId, context.getShareIdList())
+                .eq(ShareFile::getCreateUser, context.getUserId());
+//        QueryWrapper queryWrapper = Wrappers.query();
+//        queryWrapper.in("share_id", context.getShareIdList());
+//        queryWrapper.eq("create_user", context.getUserId());
+        if (!shareFileService.remove(wrapper)) {
+            throw new BusinessException("取消分享失败");
+        }
+    }
 
 }
 

@@ -2,6 +2,10 @@ package com.whf.pan.server.modules.share.mapper;
 
 import com.whf.pan.server.modules.share.entity.Share;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author 26570
@@ -10,6 +14,14 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.whf.pan.server.modules.share.entity.Share
 */
 public interface ShareMapper extends BaseMapper<Share> {
+
+    /**
+     * 查询用户的分享列表
+     *
+     * @param userId
+     * @return
+     */
+    List<ShareUrlListVO> selectShareVOListByUserId(@Param("userId") Long userId);
 
 }
 

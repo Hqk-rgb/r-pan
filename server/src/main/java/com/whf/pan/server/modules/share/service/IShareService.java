@@ -1,9 +1,14 @@
 package com.whf.pan.server.modules.share.service;
 
+import com.whf.pan.server.modules.share.context.CancelShareContext;
 import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
+import com.whf.pan.server.modules.share.context.QueryShareListContext;
 import com.whf.pan.server.modules.share.entity.Share;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
+
+import java.util.List;
 
 /**
 * @author 26570
@@ -19,5 +24,21 @@ public interface IShareService extends IService<Share> {
      * @return
      */
     ShareUrlVO create(CreateShareUrlContext context);
+
+
+    /**
+     * 查询用户的分享列表
+     *
+     * @param context
+     * @return
+     */
+    List<ShareUrlListVO> getShares(QueryShareListContext context);
+
+    /**
+     * 取消分享链接
+     *
+     * @param context
+     */
+    void cancelShare(CancelShareContext context);
 
 }

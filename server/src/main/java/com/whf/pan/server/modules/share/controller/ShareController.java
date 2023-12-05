@@ -4,18 +4,21 @@ import com.google.common.base.Splitter;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.response.R;
 import com.whf.pan.core.utils.IdUtil;
+import com.whf.pan.server.common.utils.UserIdUtil;
+import com.whf.pan.server.modules.share.context.CancelShareContext;
 import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
+import com.whf.pan.server.modules.share.context.QueryShareListContext;
 import com.whf.pan.server.modules.share.converter.ShareConverter;
+import com.whf.pan.server.modules.share.po.CancelSharePO;
 import com.whf.pan.server.modules.share.po.CreateShareUrlPO;
 import com.whf.pan.server.modules.share.service.IShareService;
+import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -57,5 +60,39 @@ public class ShareController {
         return R.data(vo);
     }
 
+    @ApiOperation(
+            value = "查询分享链接列表",
+            notes = "该接口提供了查询分享链接列表的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("shares")
+    public R<List<ShareUrlListVO>> getShares() {
+        QueryShareListContext context = new QueryShareListContext();
+        context.setUserId(UserIdUtil.get());
+        List<ShareUrlListVO> result = shareService.getShares(context);
+        return R.data(result);
+    }
+
+
+    @ApiOperation(
+            value = "取消分享",
+            notes = "该接口提供了取消分享的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("share")
+    public R cancelShare(@Validated @RequestBody CancelSharePO cancelSharePO) {
+        CancelShareContext context = new CancelShareContext();
+
+        context.setUserId(UserIdUtil.get());
+
+        String shareIds = cancelSharePO.getShareIds();
+        List<Long> shareIdList = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(shareIds).stream().map(IdUtil::decrypt).collect(Collectors.toList());
+        context.setShareIdList(shareIdList);
+
+        shareService.cancelShare(context);
+        return R.success();
+    }
 
 }
