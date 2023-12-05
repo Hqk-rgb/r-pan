@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
+import com.whf.pan.server.modules.share.context.CancelShareContext;
 import com.whf.pan.server.modules.share.context.CreateShareUrlContext;
 import com.whf.pan.server.modules.share.context.QueryShareListContext;
 import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
@@ -17,6 +18,7 @@ import com.whf.pan.server.modules.user.context.UserLoginContext;
 import com.whf.pan.server.modules.user.context.UserRegisterContext;
 import com.whf.pan.server.modules.user.service.IUserService;
 import com.whf.pan.server.modules.user.vo.UserInfoVO;
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -104,6 +106,45 @@ public class ShareTest {
         queryShareListContext.setUserId(userId);
         List<ShareUrlListVO> result = shareService.getShares(queryShareListContext);
         Assert.notEmpty(result);
+    }
+
+    /**
+     * 取消分享成功
+     */
+    @Test
+    public void cancelShareSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        ShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        QueryShareListContext queryShareListContext = new QueryShareListContext();
+        queryShareListContext.setUserId(userId);
+        List<ShareUrlListVO> result = shareService.getShares(queryShareListContext);
+        Assert.notEmpty(result);
+
+        CancelShareContext cancelShareContext = new CancelShareContext();
+        cancelShareContext.setUserId(userId);
+        cancelShareContext.setShareIdList(Lists.newArrayList(vo.getShareId()));
+        shareService.cancelShare(cancelShareContext);
+
+        result = shareService.getShares(queryShareListContext);
+        Assert.isTrue(CollectionUtils.isEmpty(result));
     }
 
 
