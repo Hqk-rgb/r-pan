@@ -474,6 +474,69 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         return stringBuffer.toString();
     }
 
+    /******************************************************************查看分享简单详情************************************************************/
+
+    /**
+     * 查询分享的简单详情
+     * <p>
+     * 1、校验分享的状态
+     * 2、初始化分享实体
+     * 3、查询分享的主体信息
+     * 4、查询分享者的信息
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public ShareSimpleDetailVO simpleDetail(QueryShareSimpleDetailContext context) {
+        Share record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        initShareSimpleVO(context);
+        assembleMainShareSimpleInfo(context);
+        assembleShareSimpleUserInfo(context);
+        return context.getVo();
+    }
+
+    /**
+     * 初始化简单分享详情的VO对象
+     *
+     * @param context
+     */
+    private void initShareSimpleVO(QueryShareSimpleDetailContext context) {
+        ShareSimpleDetailVO vo = new ShareSimpleDetailVO();
+        context.setVo(vo);
+    }
+
+    /**
+     * 填充简单分享详情实体信息
+     *
+     * @param context
+     */
+    private void assembleMainShareSimpleInfo(QueryShareSimpleDetailContext context) {
+        Share record = context.getRecord();
+        ShareSimpleDetailVO vo = context.getVo();
+        vo.setShareId(record.getShareId());
+        vo.setShareName(record.getShareName());
+    }
+
+    /**
+     * 拼装简单文件分享详情的用户信息
+     *
+     * @param context
+     */
+    private void assembleShareSimpleUserInfo(QueryShareSimpleDetailContext context) {
+        User record = userService.getById(context.getRecord().getCreateUser());
+        if (Objects.isNull(record)) {
+            throw new BusinessException("用户信息查询失败");
+        }
+        ShareUserInfoVO shareUserInfoVO = new ShareUserInfoVO();
+
+        shareUserInfoVO.setUserId(record.getUserId());
+        shareUserInfoVO.setUsername(encryptUsername(record.getUsername()));
+
+        context.getVo().setShareUserInfoVO(shareUserInfoVO);
+    }
+
 }
 
 

@@ -12,6 +12,7 @@ import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
 import com.whf.pan.server.modules.share.enums.ShareTypeEnum;
 import com.whf.pan.server.modules.share.service.IShareService;
 import com.whf.pan.server.modules.share.vo.ShareDetailVO;
+import com.whf.pan.server.modules.share.vo.ShareSimpleDetailVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 import com.whf.pan.server.modules.user.context.UserLoginContext;
@@ -243,6 +244,37 @@ public class ShareTest {
         ShareDetailVO shareDetailVO = shareService.detail(queryShareDetailContext);
         Assert.notNull(shareDetailVO);
         System.out.println(shareDetailVO);
+    }
+
+    /**
+     * 校验查询分享简单详情成功
+     */
+    @Test
+    public void queryShareSimpleDetailSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(fileId));
+        ShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        QueryShareSimpleDetailContext queryShareSimpleDetailContext = new QueryShareSimpleDetailContext();
+        queryShareSimpleDetailContext.setShareId(vo.getShareId());
+        ShareSimpleDetailVO shareSimpleDetailVO = shareService.simpleDetail(queryShareSimpleDetailContext);
+        Assert.notNull(shareSimpleDetailVO);
     }
 
 
