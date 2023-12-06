@@ -1211,6 +1211,24 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return records.stream().map(fileConverter::userFileTOUserFileVO).collect(Collectors.toList());
     }
 
+    /***********************************************************************分享文件下载 不校验用户是否是否是上传用户**********************************************/
+
+    /**
+     * 文件下载 不校验用户是否是否是上传用户
+     *
+     * @param context
+     */
+    @Override
+    public void downloadWithoutCheckUser(FileDownloadContext context) {
+        UserFile record = getById(context.getFileId());
+        if (Objects.isNull(record)) {
+            throw new BusinessException("当前文件记录不存在");
+        }
+        if (checkIsFolder(record)) {
+            throw new BusinessException("文件夹暂不支持下载");
+        }
+        doDownload(record, context.getResponse());
+    }
 }
 
 

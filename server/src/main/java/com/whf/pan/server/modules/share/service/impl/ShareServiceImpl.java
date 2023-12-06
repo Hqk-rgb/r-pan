@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
 import com.whf.pan.server.modules.file.context.CopyFileContext;
+import com.whf.pan.server.modules.file.context.FileDownloadContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.share.vo.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -637,6 +638,38 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         copyFileContext.setTargetParentId(context.getTargetParentId());
         copyFileContext.setUserId(context.getUserId());
         userFileService.copy(copyFileContext);
+    }
+
+    /******************************************************************分享的文件下载************************************************************/
+
+    /**
+     * 分享的文件下载
+     * <p>
+     * 1、校验分享状态
+     * 2、校验文件ID的合法性
+     * 3、执行文件下载的动作
+     *
+     * @param context
+     */
+    @Override
+    public void download(ShareFileDownloadContext context) {
+        checkShareStatus(context.getShareId());
+        checkFileIdIsOnShareStatus(context.getShareId(), Lists.newArrayList(context.getFileId()));
+        doDownload(context);
+    }
+
+    /**
+     * 执行分享文件下载的动作
+     * 委托文件模块去做
+     *
+     * @param context
+     */
+    private void doDownload(ShareFileDownloadContext context) {
+        FileDownloadContext fileDownloadContext = new FileDownloadContext();
+        fileDownloadContext.setFileId(context.getFileId());
+        fileDownloadContext.setUserId(context.getUserId());
+        fileDownloadContext.setResponse(context.getResponse());
+        userFileService.downloadWithoutCheckUser(fileDownloadContext);
     }
 
 }

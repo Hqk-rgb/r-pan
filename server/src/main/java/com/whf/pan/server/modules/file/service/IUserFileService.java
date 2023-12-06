@@ -161,4 +161,11 @@ public interface IUserFileService extends IService<UserFile> {
      * @return
      */
     List<UserFileVO> transferVOList(List<UserFile> records);
+
+    /**
+     * 分享文件的下载 不校验用户是否是否是上传用户
+     *
+     * @param context
+     */
+    void downloadWithoutCheckUser(FileDownloadContext context);
 }
