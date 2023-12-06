@@ -14,6 +14,7 @@ import com.whf.pan.server.modules.share.converter.ShareConverter;
 import com.whf.pan.server.modules.share.po.CancelSharePO;
 import com.whf.pan.server.modules.share.po.CheckShareCodePO;
 import com.whf.pan.server.modules.share.po.CreateShareUrlPO;
+import com.whf.pan.server.modules.share.po.ShareSavePO;
 import com.whf.pan.server.modules.share.service.IShareService;
 import com.whf.pan.server.modules.share.vo.ShareDetailVO;
 import com.whf.pan.server.modules.share.vo.ShareSimpleDetailVO;
@@ -165,6 +166,29 @@ public class ShareController {
         context.setParentId(IdUtil.decrypt(parentId));
         List<UserFileVO> result = shareService.fileList(context);
         return R.data(result);
+    }
+
+    @ApiOperation(
+            value = "保存至我的网盘",
+            notes = "该接口提供了保存至我的网盘的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @NeedShareCode
+    @PostMapping("share/save")
+    public R saveFiles(@Validated @RequestBody ShareSavePO shareSavePO) {
+        ShareSaveContext context = new ShareSaveContext();
+
+        String fileIds = shareSavePO.getFileIds();
+        List<Long> fileIdList = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(fileIds).stream().map(IdUtil::decrypt).collect(Collectors.toList());
+        context.setFileIdList(fileIdList);
+
+        context.setTargetParentId(IdUtil.decrypt(shareSavePO.getTargetParentId()));
+        context.setUserId(UserIdUtil.get());
+        context.setShareId(ShareIdUtil.get());
+
+        shareService.saveFiles(context);
+        return R.success();
     }
 
 }

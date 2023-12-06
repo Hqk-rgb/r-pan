@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
+import com.whf.pan.server.modules.file.context.CopyFileContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.share.vo.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -594,6 +595,50 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
 
         throw new BusinessException(ResponseCode.SHARE_FILE_MISS);
     }
+
+
+    /******************************************************************保存到我的网盘************************************************************/
+
+    /**
+     * 转存至我的网盘
+     * <p>
+     * 1、校验分享状态
+     * 2、校验文件ID是否合法
+     * 3、执行保存我的网盘动作
+     *
+     * @param context
+     */
+    @Override
+    public void saveFiles(ShareSaveContext context) {
+        checkShareStatus(context.getShareId());
+        checkFileIdIsOnShareStatus(context.getShareId(), context.getFileIdList());
+        doSaveFiles(context);
+    }
+
+    /**
+     * 校验文件ID是否属于某一个分享
+     *
+     * @param shareId
+     * @param fileIdList
+     */
+    private void checkFileIdIsOnShareStatus(Long shareId, List<Long> fileIdList) {
+        checkFileIdIsOnShareStatusAndGetAllShareUserFiles(shareId, fileIdList);
+    }
+
+    /**
+     * 执行保存我的网盘动作
+     * 委托文件模块做文件拷贝的操作
+     *
+     * @param context
+     */
+    private void doSaveFiles(ShareSaveContext context) {
+        CopyFileContext copyFileContext = new CopyFileContext();
+        copyFileContext.setFileIdList(context.getFileIdList());
+        copyFileContext.setTargetParentId(context.getTargetParentId());
+        copyFileContext.setUserId(context.getUserId());
+        userFileService.copy(copyFileContext);
+    }
+
 }
 
 
