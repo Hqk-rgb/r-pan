@@ -1176,6 +1176,41 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return childRecords;
     }
 
+    /***********************************************************************递归查询所有的子文件信息**********************************************/
+
+
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param fileIdList
+     * @return
+     */
+    @Override
+    public List<UserFile> findAllFileRecordsByFileIdList(List<Long> fileIdList) {
+        if (CollectionUtils.isEmpty(fileIdList)) {
+            return Lists.newArrayList();
+        }
+        List<UserFile> records = listByIds(fileIdList);
+        if (CollectionUtils.isEmpty(records)) {
+            return Lists.newArrayList();
+        }
+        return findAllFileRecords(records);
+    }
+
+    /**
+     * 实体转换
+     *
+     * @param records
+     * @return
+     */
+    @Override
+    public List<UserFileVO> transferVOList(List<UserFile> records) {
+        if (CollectionUtils.isEmpty(records)) {
+            return Lists.newArrayList();
+        }
+        return records.stream().map(fileConverter::userFileTOUserFileVO).collect(Collectors.toList());
+    }
+
 }
 
 

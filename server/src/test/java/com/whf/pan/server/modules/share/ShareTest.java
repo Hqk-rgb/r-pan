@@ -7,6 +7,7 @@ import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.server.PanLauncher;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.service.IUserFileService;
+import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.enums.ShareDayTypeEnum;
 import com.whf.pan.server.modules.share.enums.ShareTypeEnum;
@@ -277,6 +278,38 @@ public class ShareTest {
         Assert.notNull(shareSimpleDetailVO);
     }
 
+
+    /**
+     * 校验查询分享下一级文件列表成功
+     */
+    @Test
+    public void queryShareFileListSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = userFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        CreateShareUrlContext createShareUrlContext = new CreateShareUrlContext();
+        createShareUrlContext.setShareName("share-1");
+        createShareUrlContext.setShareDayType(ShareDayTypeEnum.SEVEN_DAYS_VALIDITY.getCode());
+        createShareUrlContext.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        createShareUrlContext.setUserId(userId);
+        createShareUrlContext.setShareFileIdList(Lists.newArrayList(userInfoVO.getRootFileId()));
+        ShareUrlVO vo = shareService.create(createShareUrlContext);
+        Assert.isTrue(Objects.nonNull(vo));
+
+        QueryChildFileListContext queryChildFileListContext = new QueryChildFileListContext();
+        queryChildFileListContext.setShareId(vo.getShareId());
+        queryChildFileListContext.setParentId(userInfoVO.getRootFileId());
+        List<UserFileVO> fileVOList = shareService.fileList(queryChildFileListContext);
+        Assert.notEmpty(fileVOList);
+    }
 
     /************************************************private************************************************/
 

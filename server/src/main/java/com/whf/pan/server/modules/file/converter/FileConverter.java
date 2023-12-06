@@ -4,6 +4,7 @@ import com.whf.pan.server.modules.file.context.*;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.file.po.*;
 import com.whf.pan.server.modules.file.vo.FolderTreeNodeVO;
+import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.storage.engine.core.context.StoreFileChunkContext;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -62,4 +63,5 @@ public interface FileConverter {
     FolderTreeNodeVO userFileTOFolderTreeNodeVO(UserFile record);
 
 
+    UserFileVO userFileTOUserFileVO(UserFile record);
 }

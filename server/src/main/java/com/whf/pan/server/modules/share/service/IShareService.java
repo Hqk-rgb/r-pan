@@ -1,5 +1,6 @@
 package com.whf.pan.server.modules.share.service;
 
+import com.whf.pan.server.modules.file.vo.UserFileVO;
 import com.whf.pan.server.modules.share.context.*;
 import com.whf.pan.server.modules.share.entity.Share;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -64,4 +65,12 @@ public interface IShareService extends IService<Share> {
      * @return
      */
     ShareSimpleDetailVO simpleDetail(QueryShareSimpleDetailContext context);
+
+    /**
+     * 获取下一级的文件列表
+     *
+     * @param context
+     * @return
+     */
+    List<UserFileVO> fileList(QueryChildFileListContext context);
 }

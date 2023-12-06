@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
+import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.share.vo.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.hash.BloomFilter;
@@ -43,7 +44,9 @@ import javax.annotation.Resource;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
 * @author 26570
@@ -537,6 +540,60 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         context.getVo().setShareUserInfoVO(shareUserInfoVO);
     }
 
+    /******************************************************************获取下一级文件列表************************************************************/
+
+    /**
+     * 获取下一级的文件列表
+     * <p>
+     * 1、校验分享的状态
+     * 2、校验文件的ID实在分享的文件列表中
+     * 3、查询对应文件的子文件列表，返回
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<UserFileVO> fileList(QueryChildFileListContext context) {
+        Share record = checkShareStatus(context.getShareId());
+        context.setRecord(record);
+        List<UserFileVO> allUserFileRecords = checkFileIdIsOnShareStatusAndGetAllShareUserFiles(context.getShareId(), Lists.newArrayList(context.getParentId()));
+        Map<Long, List<UserFileVO>> parentIdFileListMap = allUserFileRecords.stream().collect(Collectors.groupingBy(UserFileVO::getParentId));
+        List<UserFileVO> rPanUserFileVOS = parentIdFileListMap.get(context.getParentId());
+        if (CollectionUtils.isEmpty(rPanUserFileVOS)) {
+            return Lists.newArrayList();
+        }
+        return rPanUserFileVOS;
+    }
+
+    /**
+     * 校验文件是否处于分享状态，返回该分享的所有文件列表
+     *
+     * @param shareId
+     * @param fileIdList
+     * @return
+     */
+    private List<UserFileVO> checkFileIdIsOnShareStatusAndGetAllShareUserFiles(Long shareId, List<Long> fileIdList) {
+        List<Long> shareFileIdList = getShareFileIdList(shareId);
+        if (CollectionUtils.isEmpty(shareFileIdList)) {
+            return Lists.newArrayList();
+        }
+        List<UserFile> allFileRecords = userFileService.findAllFileRecordsByFileIdList(shareFileIdList);
+        if (CollectionUtils.isEmpty(allFileRecords)) {
+            return Lists.newArrayList();
+        }
+        allFileRecords = allFileRecords.stream()
+                .filter(Objects::nonNull)
+                .filter(record -> Objects.equals(record.getDelFlag(), DelFlagEnum.NO.getCode()))
+                .collect(Collectors.toList());
+
+        List<Long> allFileIdList = allFileRecords.stream().map(UserFile::getFileId).collect(Collectors.toList());
+
+        if (allFileIdList.containsAll(fileIdList)) {
+            return userFileService.transferVOList(allFileRecords);
+        }
+
+        throw new BusinessException(ResponseCode.SHARE_FILE_MISS);
+    }
 }
 
 
