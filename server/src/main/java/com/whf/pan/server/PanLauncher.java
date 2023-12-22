@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotBlank;
 @EnableTransactionManagement
 @MapperScan(basePackages = Constants.BASE_COMPONENT_SCAN_PATH+".server.modules.**.mapper")
 @ComponentScan(basePackages = "com.whf.pan")
+@EnableAsync
 public class PanLauncher {
     public static void main(String[] args) {
         SpringApplication.run(PanLauncher.class);

@@ -18,9 +18,9 @@ import org.springframework.stereotype.Component;
 public class CleanExpireFileChunkTaskLauncher implements CommandLineRunner {
 
     //每天零点第一秒触发
-//    private final static String CRON = "1 0 0 * * ? ";
+    private final static String CRON = "1 0 0 * * ? ";
     //每5秒触发
-    private final static String CRON = "0/5 * * * * ? ";
+    //private final static String CRON = "0/5 * * * * ? ";
 
     @Autowired
     private CleanExpireChunkFileTask task;
