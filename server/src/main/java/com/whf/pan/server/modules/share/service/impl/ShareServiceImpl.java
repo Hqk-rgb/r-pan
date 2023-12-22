@@ -3,14 +3,16 @@ package com.whf.pan.server.modules.share.service.impl;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
+import com.whf.pan.server.common.event.log.ErrorLogEvent;
+import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CopyFileContext;
 import com.whf.pan.server.modules.file.context.FileDownloadContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
 import com.whf.pan.server.modules.share.vo.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.common.hash.BloomFilter;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.response.ResponseCode;
@@ -39,15 +41,15 @@ import com.whf.pan.server.modules.user.service.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.util.Sets;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.net.URLEncoder;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +60,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
-    implements IShareService {
+    implements IShareService, ApplicationContextAware {
 
     @Resource
     private ServerConfig config;
@@ -75,6 +77,12 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
     @Resource
     private IUserFileService userFileService;
 
+
+    private ApplicationContext applicationContext;
+
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     // @Resource
     //private BloomFilterManager manager;
@@ -672,6 +680,130 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         userFileService.downloadWithoutCheckUser(fileDownloadContext);
     }
 
+    /******************************************************************刷新受影响的对应的分享的状态************************************************************/
+
+
+    /**
+     * 刷新受影响的对应的分享的状态
+     * <p>
+     * 1、查询所有受影响的分享的ID集合
+     * 2、去判断每一个分享对应的文件以及所有的父文件信息均为正常，该种情况，把分享的状态变为正常
+     * 3、如果有分享的文件或者是父文件信息被删除，变更该分享的状态为有文件被删除
+     *
+     * @param allAvailableFileIdList
+     */
+    @Override
+    public void refreshShareStatus(List<Long> allAvailableFileIdList) {
+        List<Long> shareIdList = getShareIdListByFileIdList(allAvailableFileIdList);
+        if (CollectionUtils.isEmpty(shareIdList)) {
+            return;
+        }
+        Set<Long> shareIdSet = Sets.newHashSet(shareIdList);
+        shareIdSet.stream().forEach(this::refreshOneShareStatus);
+    }
+
+    /**
+     * 通过文件ID查询对应的分享ID集合
+     *
+     * @param allAvailableFileIdList
+     * @return
+     */
+    private List<Long> getShareIdListByFileIdList(List<Long> allAvailableFileIdList) {
+        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(ShareFile::getShareId)
+                .in(ShareFile::getFileId, allAvailableFileIdList);
+//        QueryWrapper queryWrapper = Wrappers.query();
+//        queryWrapper.select("share_id");
+//        queryWrapper.in("file_id", allAvailableFileIdList);
+        List<Long> shareIdList = shareFileService.listObjs(wrapper, value -> (Long) value);
+        return shareIdList;
+    }
+
+    /**
+     * 刷新一个分享的分享状态
+     * <p>
+     * 1、查询对应的分享信息，判断有效
+     * 2、 去判断该分享对应的文件以及所有的父文件信息均为正常，该种情况，把分享的状态变为正常
+     * 3、如果有分享的文件或者是父文件信息被删除，变更该分享的状态为有文件被删除
+     *
+     * @param shareId
+     */
+    private void refreshOneShareStatus(Long shareId) {
+        Share record = getById(shareId);
+        if (Objects.isNull(record)) {
+            return;
+        }
+
+        ShareStatusEnum shareStatus = ShareStatusEnum.NORMAL;
+        if (!checkShareFileAvailable(shareId)) {
+            shareStatus = ShareStatusEnum.FILE_DELETED;
+        }
+
+        if (Objects.equals(record.getShareStatus(), shareStatus.getCode())) {
+            return;
+        }
+
+        // doChangeShareStatus(record, shareStatus);
+        doChangeShareStatus(shareId, shareStatus);
+    }
+
+    /**
+     * 执行刷新文件分享状态的动作
+     *
+     * @param shareId
+     * @param shareStatus
+     */
+    private void doChangeShareStatus(Long shareId,ShareStatusEnum shareStatus){
+        LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Share::getShareId, shareId)
+                .set(Share::getShareStatus, shareStatus.getCode());
+        if (!update(wrapper)){
+            applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为：" + shareId + ",分享"+"状态改为："+shareStatus.getCode(),Constants.ZERO_LONG));
+        }
+    }
+//    private void doChangeShareStatus(Share record, ShareStatusEnum shareStatus) {
+//        record.setShareStatus(shareStatus.getCode());
+//        if (!updateById(record)) {
+//            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
+//                    "状态改为：" + shareStatus.getCode(), Constants.ZERO_LONG));
+//        }
+//    }
+
+    /**
+     * 检查该分享所有的文件以及所有的父文件均为正常状态
+     *
+     * @param shareId
+     * @return
+     */
+    private boolean checkShareFileAvailable(Long shareId) {
+        List<Long> shareFileIdList = getShareFileIdList(shareId);
+        for (Long fileId : shareFileIdList) {
+            if (!checkUpFileAvailable(fileId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 检查该文件以及所有的文件夹信息均为正常状态
+     *
+     * @param fileId
+     * @return
+     */
+    private boolean checkUpFileAvailable(Long fileId) {
+        UserFile record = userFileService.getById(fileId);
+        if (Objects.isNull(record)) {
+            return false;
+        }
+        if (Objects.equals(record.getDelFlag(), DelFlagEnum.YES.getCode())) {
+            return false;
+        }
+        if (Objects.equals(record.getParentId(), FileConstants.TOP_PARENT_ID)) {
+            return true;
+        }
+        return checkUpFileAvailable(record.getParentId());
+    }
 }
 
 

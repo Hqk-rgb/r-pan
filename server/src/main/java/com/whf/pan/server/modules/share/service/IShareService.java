@@ -87,4 +87,11 @@ public interface IShareService extends IService<Share> {
      * @param context
      */
     void download(ShareFileDownloadContext context);
+
+    /**
+     * 刷新受影响的对应的分享的状态
+     *
+     * @param allAvailableFileIdList
+     */
+    void refreshShareStatus(List<Long> allAvailableFileIdList);
 }
