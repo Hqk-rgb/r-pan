@@ -282,12 +282,12 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
      * @param context
      */
     private void doCancelShareFiles(CancelShareContext context) {
-        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(ShareFile::getShareId, context.getShareIdList())
-                .eq(ShareFile::getCreateUser, context.getUserId());
-//        QueryWrapper queryWrapper = Wrappers.query();
-//        queryWrapper.in("share_id", context.getShareIdList());
-//        queryWrapper.eq("create_user", context.getUserId());
+//        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.in(ShareFile::getShareId, context.getShareIdList())
+//                .eq(ShareFile::getCreateUser, context.getUserId());
+        QueryWrapper wrapper = Wrappers.query();
+        wrapper.in("share_id", context.getShareIdList());
+        wrapper.eq("create_user", context.getUserId());
         if (!shareFileService.remove(wrapper)) {
             throw new BusinessException("取消分享失败");
         }
@@ -447,12 +447,12 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         if (Objects.isNull(shareId)) {
             return Lists.newArrayList();
         }
-        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(ShareFile::getFileId)
-                .eq(ShareFile::getShareId, shareId);
-//        QueryWrapper queryWrapper = Wrappers.query();
-//        queryWrapper.select("file_id");
-//        queryWrapper.eq("share_id", shareId);
+//        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.select(ShareFile::getFileId)
+//                .eq(ShareFile::getShareId, shareId);
+        QueryWrapper wrapper = Wrappers.query();
+        wrapper.select("file_id");
+        wrapper.eq("share_id", shareId);
         List<Long> fileIdList = shareFileService.listObjs(wrapper, value -> (Long) value);
         return fileIdList;
     }
@@ -709,12 +709,12 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
      * @return
      */
     private List<Long> getShareIdListByFileIdList(List<Long> allAvailableFileIdList) {
-        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(ShareFile::getShareId)
-                .in(ShareFile::getFileId, allAvailableFileIdList);
-//        QueryWrapper queryWrapper = Wrappers.query();
-//        queryWrapper.select("share_id");
-//        queryWrapper.in("file_id", allAvailableFileIdList);
+//        LambdaQueryWrapper<ShareFile> wrapper = new LambdaQueryWrapper<>();
+//        wrapper.select(ShareFile::getShareId)
+//                .in(ShareFile::getFileId, allAvailableFileIdList);
+        QueryWrapper wrapper = Wrappers.query();
+        wrapper.select("share_id");
+        wrapper.in("file_id", allAvailableFileIdList);
         List<Long> shareIdList = shareFileService.listObjs(wrapper, value -> (Long) value);
         return shareIdList;
     }
