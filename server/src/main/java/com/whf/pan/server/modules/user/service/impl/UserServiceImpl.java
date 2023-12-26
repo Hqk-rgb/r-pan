@@ -8,6 +8,7 @@ import com.whf.pan.core.response.ResponseCode;
 import com.whf.pan.core.utils.IdUtil;
 import com.whf.pan.core.utils.JwtUtil;
 import com.whf.pan.core.utils.PasswordUtil;
+import com.whf.pan.server.common.cache.AnnotationCacheService;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CreateFolderContext;
 import com.whf.pan.server.modules.file.entity.UserFile;
@@ -20,13 +21,18 @@ import com.whf.pan.server.modules.user.service.IUserService;
 import com.whf.pan.server.modules.user.mapper.UserMapper;
 import com.whf.pan.server.modules.user.vo.UserInfoVO;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -43,6 +49,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private IUserFileService userFileService;
     @Resource
     private CacheManager cacheManager;
+
+    @Autowired
+    @Qualifier(value = "userAnnotationCacheService")
+    private AnnotationCacheService<User> cacheService;
 
 
     /**
@@ -406,6 +416,75 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private UserFile getUserRootFileInfo(Long userId) {
         return userFileService.getUserRootFile(userId);
     }
+
+    /********************************************方法重写****************************************************************/
+
+    /**
+     * 根据 ID 删除
+     *
+     * @param id 主键ID
+     */
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+//        return super.removeById(id);
+    }
+
+    /**
+     * 删除（根据ID 批量删除）
+     *
+     * @param idList 主键ID列表
+     */
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        throw new BusinessException("请更换手动缓存");
+//        return super.removeByIds(idList);
+    }
+
+    /**
+     * 根据 ID 选择修改
+     *
+     * @param entity 实体对象
+     */
+    @Override
+    public boolean updateById(User entity) {
+        return cacheService.updateById(entity.getUserId(), entity);
+//        return super.updateById(entity);
+    }
+
+    /**
+     * 根据ID 批量更新
+     *
+     * @param entityList 实体对象集合
+     */
+    @Override
+    public boolean updateBatchById(Collection<User> entityList) {
+        throw new BusinessException("请更换手动缓存");
+//        return super.updateBatchById(entityList);
+    }
+
+    /**
+     * 根据 ID 查询
+     *
+     * @param id 主键ID
+     */
+    @Override
+    public User getById(Serializable id) {
+        return cacheService.getById(id);
+//        return super.getById(id);
+    }
+
+    /**
+     * 查询（根据ID 批量查询）
+     *
+     * @param idList 主键ID列表
+     */
+    @Override
+    public List<User> listByIds(Collection<? extends Serializable> idList) {
+        throw new BusinessException("请更换手动缓存");
+//        return super.listByIds(idList);
+    }
+
 }
 
 

@@ -42,20 +42,22 @@ public class FileController {
     private FileConverter fileConverter;
 
     @ApiOperation(
-            value = "获取文件列表",
-            notes = "该接口提供了用户查询某文件夹下某些文件类型的文件列表的功能",
+            value = "查询文件列表",
+            notes = "该接口提供了用户插叙某文件夹下面某些文件类型的文件列表的功能",
             consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
     @GetMapping("files")
-    public R<List<UserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId",required = false) String parentId,
-                                    @RequestParam(value = "fileTypes",required = false,defaultValue = FileConstants.ALL_FILE_TYPE) String fileTypes){
+    public R<List<UserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId", required = false) String parentId,
+                                        @RequestParam(value = "fileTypes", required = false, defaultValue = FileConstants.ALL_FILE_TYPE) String fileTypes) {
+        Long realParentId = -1L;
+        if (!FileConstants.ALL_FILE_TYPE.equals(parentId)) {
+            realParentId = IdUtil.decrypt(parentId);
+        }
 
-        // 解密 parentId
-        Long realParentId = IdUtil.decrypt(parentId);
         List<Integer> fileTypeArray = null;
 
-        if (!Objects.equals(FileConstants.ALL_FILE_TYPE,fileTypes)){
+        if (!Objects.equals(FileConstants.ALL_FILE_TYPE, fileTypes)) {
             fileTypeArray = Splitter.on(Constants.COMMON_SEPARATOR).splitToList(fileTypes).stream().map(Integer::valueOf).collect(Collectors.toList());
         }
 
@@ -67,7 +69,6 @@ public class FileController {
 
         List<UserFileVO> result = userFileService.getFileList(context);
         return R.data(result);
-
     }
 
     @ApiOperation(

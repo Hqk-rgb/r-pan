@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
+import com.whf.pan.server.common.cache.ManualCacheService;
 import com.whf.pan.server.common.event.log.ErrorLogEvent;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CopyFileContext;
@@ -42,12 +43,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.util.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -83,6 +87,10 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
+
+    @Autowired
+    @Qualifier(value = "shareManualCacheService")
+    private ManualCacheService<Share> cacheService;
 
     // @Resource
     //private BloomFilterManager manager;
@@ -803,6 +811,79 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
             return true;
         }
         return checkUpFileAvailable(record.getParentId());
+    }
+
+    /*******************************************方法重写*******************************************/
+
+
+    /**
+     * 根据 ID 删除
+     *
+     * @param id 主键ID
+     */
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+//        return super.removeById(id);
+    }
+
+    /**
+     * 删除（根据ID 批量删除）
+     *
+     * @param idList 主键ID列表
+     */
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        return cacheService.removeByIds(idList);
+//        return super.removeByIds(idList);
+    }
+
+    /**
+     * 根据 ID 选择修改
+     *
+     * @param entity 实体对象
+     */
+    @Override
+    public boolean updateById(Share entity) {
+        return cacheService.updateById(entity.getShareId(), entity);
+//        return super.updateById(entity);
+    }
+
+    /**
+     * 根据ID 批量更新
+     *
+     * @param entityList 实体对象集合
+     */
+    @Override
+    public boolean updateBatchById(Collection<Share> entityList) {
+        if (CollectionUtils.isEmpty(entityList)) {
+            return true;
+        }
+        Map<Long, Share> entityMap = entityList.stream().collect(Collectors.toMap(Share::getShareId, e -> e));
+        return cacheService.updateByIds(entityMap);
+//        return super.updateBatchById(entityList);
+    }
+
+    /**
+     * 根据 ID 查询
+     *
+     * @param id 主键ID
+     */
+    @Override
+    public Share getById(Serializable id) {
+        return cacheService.getById(id);
+//        return super.getById(id);
+    }
+
+    /**
+     * 查询（根据ID 批量查询）
+     *
+     * @param idList 主键ID列表
+     */
+    @Override
+    public List<Share> listByIds(Collection<? extends Serializable> idList) {
+        return cacheService.getByIds(idList);
+//        return super.listByIds(idList);
     }
 }
 
