@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.google.common.collect.Lists;
+import com.whf.pan.bloom.filter.core.BloomFilter;
+import com.whf.pan.bloom.filter.core.BloomFilterManager;
 import com.whf.pan.server.common.cache.ManualCacheService;
 import com.whf.pan.server.common.event.log.ErrorLogEvent;
 import com.whf.pan.server.modules.file.constants.FileConstants;
@@ -92,8 +94,8 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
     @Qualifier(value = "shareManualCacheService")
     private ManualCacheService<Share> cacheService;
 
-    // @Resource
-    //private BloomFilterManager manager;
+     @Resource
+    private BloomFilterManager manager;
 
     private static final String BLOOM_FILTER_NAME = "SHARE_SIMPLE_DETAIL";
     /**
@@ -112,7 +114,7 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         saveShare(context);
         saveShareFiles(context);
         ShareUrlVO vo = assembleShareVO(context);
-        // afterCreate(context, vo);
+        afterCreate(context, vo);
         return vo;
     }
 
@@ -212,11 +214,11 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
      * @param vo
      */
     private void afterCreate(CreateShareUrlContext context, ShareUrlVO vo) {
-//        BloomFilter<Long> bloomFilter = manager.getFilter(BLOOM_FILTER_NAME);
-//        if (Objects.nonNull(bloomFilter)) {
-//            bloomFilter.put(context.getRecord().getShareId());
-//            log.info("crate share, add share id to bloom filter, share id is {}", context.getRecord().getShareId());
-//        }
+        BloomFilter<Long> bloomFilter = manager.getFilter(BLOOM_FILTER_NAME);
+        if (Objects.nonNull(bloomFilter)) {
+            bloomFilter.put(context.getRecord().getShareId());
+            log.info("crate share, add share id to bloom filter, share id is {}", context.getRecord().getShareId());
+        }
     }
 
 
@@ -811,6 +813,21 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
             return true;
         }
         return checkUpFileAvailable(record.getParentId());
+    }
+
+    /*******************************************滚动查询已存在的分享ID*******************************************/
+
+
+    /**
+     * 滚动查询已存在的分享ID
+     *
+     * @param startId
+     * @param limit
+     * @return
+     */
+    @Override
+    public List<Long> rollingQueryShareId(long startId, long limit) {
+        return baseMapper.rollingQueryShareId(startId, limit);
     }
 
     /*******************************************方法重写*******************************************/

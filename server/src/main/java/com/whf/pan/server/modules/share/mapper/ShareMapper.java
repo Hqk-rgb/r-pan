@@ -23,6 +23,15 @@ public interface ShareMapper extends BaseMapper<Share> {
      */
     List<ShareUrlListVO> selectShareVOListByUserId(@Param("userId") Long userId);
 
+    /**
+     * 滚动查询已存在的分享ID集合
+     *
+     * @param startId
+     * @param limit
+     * @return
+     */
+    List<Long> rollingQueryShareId(@Param("startId") long startId, @Param("limit") long limit);
+
 }
 
 
