@@ -1,6 +1,7 @@
 package com.whf.pan.server.modules.file.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.whf.pan.web.serializer.Date2StringSerializer;
 import com.whf.pan.web.serializer.IdEncryptSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -25,6 +26,7 @@ public class UserFileVO implements Serializable {
     @ApiModelProperty(value = "文件ID")
     private Long fileId;
 
+    @JsonSerialize(using = IdEncryptSerializer.class)
     @ApiModelProperty(value = "父文件夹ID")
     private Long parentId;
 
@@ -41,6 +43,7 @@ public class UserFileVO implements Serializable {
     private Integer fileType;
 
     @ApiModelProperty(value = "更新时间")
+    @JsonSerialize(using = Date2StringSerializer.class)
     private Date updateTime;
 
 }

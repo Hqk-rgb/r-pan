@@ -3,6 +3,8 @@ package com.whf.pan.server.common.stream.event.search;
 import lombok.*;
 import org.springframework.context.ApplicationEvent;
 
+import java.io.Serializable;
+
 
 /**
  * @author whf
@@ -14,16 +16,16 @@ import org.springframework.context.ApplicationEvent;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class UserSearchEvent extends ApplicationEvent {
+@NoArgsConstructor
+public class UserSearchEvent implements Serializable {
 
-    private static final long serialVersionUID = -1001802356886547037L;
+    private static final long serialVersionUID = 711847068718304917L;
 
     private String keyword;
 
     private Long userId;
 
-    public UserSearchEvent(Object source,String keyword, Long userId) {
-        super(source);
+    public UserSearchEvent(String keyword, Long userId) {
         this.keyword = keyword;
         this.userId = userId;
     }

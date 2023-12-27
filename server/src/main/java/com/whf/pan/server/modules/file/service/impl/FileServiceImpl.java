@@ -9,7 +9,8 @@ import com.google.common.collect.Lists;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.core.utils.IdUtil;
-import com.whf.pan.server.common.event.log.ErrorLogEvent;
+import com.whf.pan.server.common.stream.channel.PanChannels;
+import com.whf.pan.server.common.stream.event.log.ErrorLogEvent;
 import com.whf.pan.server.modules.file.context.FileChunkMergeAndSaveContext;
 import com.whf.pan.server.modules.file.context.FileSaveContext;
 import com.whf.pan.server.modules.file.entity.File;
@@ -21,10 +22,9 @@ import com.whf.pan.storage.engine.core.StorageEngine;
 import com.whf.pan.storage.engine.core.context.DeleteFileContext;
 import com.whf.pan.storage.engine.core.context.MergeFileContext;
 import com.whf.pan.storage.engine.core.context.StoreFileContext;
-import org.springframework.beans.BeansException;
+import com.whf.pan.stream.core.IStreamProducer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -40,21 +40,17 @@ import java.util.stream.Collectors;
 * @createDate 2023-10-28 15:45:30
 */
 @Service(value = "fileService")
-public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IFileService, ApplicationContextAware {
+public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IFileService{
 
     @Autowired
     private StorageEngine storageEngine;
 
-    private ApplicationContext applicationContext;
-
     @Resource
     private IFileChunkService fileChunkService;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 上传单文件并保存实体记录
@@ -115,10 +111,10 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
                 storageEngine.delete(deleteFileContext);
             } catch (IOException e) {
                 e.printStackTrace();
-                ErrorLogEvent errorLogEvent = new ErrorLogEvent(this,"文件删除失败，请执行手动删除！文件路径: "+realPath , userId);
-                applicationContext.publishEvent(errorLogEvent);
-                /*ErrorLogEvent errorLogEvent = new ErrorLogEvent("文件物理删除失败，请执行手动删除！文件路径: {}" + realPath, userId);
-                producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, errorLogEvent);*/
+//                ErrorLogEvent errorLogEvent = new ErrorLogEvent(this,"文件删除失败，请执行手动删除！文件路径: "+realPath , userId);
+//                applicationContext.publishEvent(errorLogEvent);
+                ErrorLogEvent errorLogEvent = new ErrorLogEvent("文件物理删除失败，请执行手动删除！文件路径: {}" + realPath, userId);
+                producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, errorLogEvent);
             }
         }
         return record;

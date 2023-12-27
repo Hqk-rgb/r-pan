@@ -2,22 +2,20 @@ package com.whf.pan.server.common.schedule.task;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.whf.pan.core.constants.Constants;
 import com.whf.pan.schedule.ScheduleTask;
-import com.whf.pan.server.common.event.log.ErrorLogEvent;
+import com.whf.pan.server.common.stream.channel.PanChannels;
+import com.whf.pan.server.common.stream.event.log.ErrorLogEvent;
 import com.whf.pan.server.modules.file.entity.FileChunk;
 import com.whf.pan.server.modules.file.service.IFileChunkService;
 import com.whf.pan.storage.engine.core.StorageEngine;
 import com.whf.pan.storage.engine.core.context.DeleteFileContext;
+import com.whf.pan.stream.core.IStreamProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -35,7 +33,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContextAware {
+public class CleanExpireChunkFileTask implements ScheduleTask{
 
     private static final Long BATCH_SIZE = 500L;
 
@@ -45,13 +43,9 @@ public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContex
     @Resource
     private StorageEngine storageEngine;
 
-    private ApplicationContext applicationContext;
-
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 获取定时任务的名称
@@ -131,9 +125,10 @@ public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContex
      * @param realPaths
      */
     private void saveErrorLog(List<String> realPaths) {
-        ErrorLogEvent event = new ErrorLogEvent(this,"文件物理删除失败，请手动执行文件删除！文件路径为：" + JSON.toJSONString(realPaths), Constants.ZERO_LONG);
-        applicationContext.publishEvent(event);
-        //producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, event);
+//        ErrorLogEvent event = new ErrorLogEvent(this,"文件物理删除失败，请手动执行文件删除！文件路径为：" + JSON.toJSONString(realPaths), Constants.ZERO_LONG);
+//        applicationContext.publishEvent(event);
+        ErrorLogEvent event = new ErrorLogEvent("文件物理删除失败，请手动执行文件删除！文件路径为：" + JSON.toJSONString(realPaths), Constants.ZERO_LONG);
+        producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, event);
     }
 
     /**

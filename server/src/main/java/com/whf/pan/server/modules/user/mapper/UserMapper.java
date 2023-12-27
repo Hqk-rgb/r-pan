@@ -2,7 +2,7 @@ package com.whf.pan.server.modules.user.mapper;
 
 import com.whf.pan.server.modules.user.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.springframework.data.repository.query.Param;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author 26570

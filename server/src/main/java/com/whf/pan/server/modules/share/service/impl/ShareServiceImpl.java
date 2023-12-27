@@ -9,7 +9,8 @@ import com.google.common.collect.Lists;
 import com.whf.pan.bloom.filter.core.BloomFilter;
 import com.whf.pan.bloom.filter.core.BloomFilterManager;
 import com.whf.pan.server.common.cache.ManualCacheService;
-import com.whf.pan.server.common.event.log.ErrorLogEvent;
+import com.whf.pan.server.common.stream.channel.PanChannels;
+import com.whf.pan.server.common.stream.event.log.ErrorLogEvent;
 import com.whf.pan.server.modules.file.constants.FileConstants;
 import com.whf.pan.server.modules.file.context.CopyFileContext;
 import com.whf.pan.server.modules.file.context.FileDownloadContext;
@@ -41,14 +42,13 @@ import com.whf.pan.server.modules.share.vo.ShareUrlListVO;
 import com.whf.pan.server.modules.share.vo.ShareUrlVO;
 import com.whf.pan.server.modules.user.entity.User;
 import com.whf.pan.server.modules.user.service.IUserService;
+import com.whf.pan.stream.core.IStreamProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
-    implements IShareService, ApplicationContextAware {
+    implements IShareService{
 
     @Resource
     private ServerConfig config;
@@ -84,11 +84,9 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
     private IUserFileService userFileService;
 
 
-    private ApplicationContext applicationContext;
-
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     @Autowired
     @Qualifier(value = "shareManualCacheService")
@@ -754,30 +752,30 @@ public class ShareServiceImpl extends ServiceImpl<ShareMapper, Share>
         }
 
         // doChangeShareStatus(record, shareStatus);
-        doChangeShareStatus(shareId, shareStatus);
+        doChangeShareStatus(record, shareStatus);
     }
 
     /**
      * 执行刷新文件分享状态的动作
      *
-     * @param shareId
+     * @param record
      * @param shareStatus
      */
-    private void doChangeShareStatus(Long shareId,ShareStatusEnum shareStatus){
-        LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(Share::getShareId, shareId)
-                .set(Share::getShareStatus, shareStatus.getCode());
-        if (!update(wrapper)){
-            applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为：" + shareId + ",分享"+"状态改为："+shareStatus.getCode(),Constants.ZERO_LONG));
-        }
-    }
-//    private void doChangeShareStatus(Share record, ShareStatusEnum shareStatus) {
-//        record.setShareStatus(shareStatus.getCode());
-//        if (!updateById(record)) {
-//            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
-//                    "状态改为：" + shareStatus.getCode(), Constants.ZERO_LONG));
+//    private void doChangeShareStatus(Long shareId,ShareStatusEnum shareStatus){
+//        LambdaUpdateWrapper<Share> wrapper = new LambdaUpdateWrapper<>();
+//        wrapper.eq(Share::getShareId, shareId)
+//                .set(Share::getShareStatus, shareStatus.getCode());
+//        if (!update(wrapper)){
+//            applicationContext.publishEvent(new ErrorLogEvent(this,"更新分享状态失败，请手动更改状态，分享ID为：" + shareId + ",分享"+"状态改为："+shareStatus.getCode(),Constants.ZERO_LONG));
 //        }
 //    }
+    private void doChangeShareStatus(Share record, ShareStatusEnum shareStatus) {
+        record.setShareStatus(shareStatus.getCode());
+        if (!updateById(record)) {
+            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
+                    "状态改为：" + shareStatus.getCode(), Constants.ZERO_LONG));
+        }
+    }
 
     /**
      * 检查该分享所有的文件以及所有的父文件均为正常状态

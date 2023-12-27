@@ -28,10 +28,10 @@
             <artifactId>swagger2</artifactId>
             <version>1.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-devtools</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.whf</groupId>
             <artifactId>mybatis-plus</artifactId>
@@ -42,6 +42,11 @@
             <artifactId>schedule</artifactId>
             <version>1.0</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.whf</groupId>-->
+<!--            <artifactId>cache-caffeine</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.whf</groupId>
             <artifactId>cache-redis</artifactId>
@@ -51,21 +56,21 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.whf</groupId>-->
-<!--            <artifactId>storage-engine-local</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.whf</groupId>
+            <artifactId>storage-engine-local</artifactId>
+            <version>1.0</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.whf</groupId>-->
 <!--            <artifactId>storage-engine-fastdfs</artifactId>-->
 <!--            <version>1.0</version>-->
 <!--        </dependency>-->
-        <dependency>
-            <groupId>com.whf</groupId>
-            <artifactId>storage-engine-oss</artifactId>
-            <version>1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.whf</groupId>-->
+<!--            <artifactId>storage-engine-oss</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
@@ -79,6 +84,16 @@
         <dependency>
             <groupId>com.whf</groupId>
             <artifactId>lock-redis</artifactId>
+            <version>1.0</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.whf</groupId>-->
+<!--            <artifactId>lock-local</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>com.whf</groupId>
+            <artifactId>stream-rocketmq</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>

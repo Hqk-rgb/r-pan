@@ -10,7 +10,8 @@ import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.core.utils.IdUtil;
-import com.whf.pan.server.common.event.file.DeleteFileEvent;
+import com.whf.pan.server.common.stream.channel.PanChannels;
+import com.whf.pan.server.common.stream.event.file.DeleteFileEvent;
 import com.whf.pan.server.common.stream.event.search.UserSearchEvent;
 import com.whf.pan.server.common.utils.HttpUtil;
 import com.whf.pan.server.modules.file.constants.FileConstants;
@@ -28,9 +29,12 @@ import com.whf.pan.server.modules.file.mapper.UserFileMapper;
 import com.whf.pan.server.modules.file.vo.*;
 import com.whf.pan.storage.engine.core.StorageEngine;
 import com.whf.pan.storage.engine.core.context.ReadFileContext;
+import com.whf.pan.stream.core.IStreamProducer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
@@ -50,15 +54,17 @@ import java.util.stream.Collectors;
 * @createDate 2023-10-28 15:45:30
 */
 @Service(value = "userFileService")
-public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService, ApplicationContextAware {
+public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService {
+
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     @Resource
     private IFileService fileService;
 
     @Resource
     private FileConverter fileConverter;
-
-    private  ApplicationContext applicationContext;
 
     @Resource
     private IFileChunkService fileChunkService;
@@ -409,17 +415,17 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
      * @param context
      */
     private void afterFileDelete(DeleteFileContext context) {
-        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this,context.getFileIdList());
-        applicationContext.publishEvent(deleteFileEvent);
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(context.getFileIdList());
+        producer.sendMessage(PanChannels.DELETE_FILE_OUTPUT, deleteFileEvent);
     }
 
 
 
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
+//    @Override
+//    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+//        this.applicationContext = applicationContext;
+//    }
 
     /*************************************************************************文件秒传*****************************************************************************************/
 
@@ -1081,8 +1087,10 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
      * @param context
      */
     private void afterSearch(FileSearchContext context) {
-        UserSearchEvent event = new UserSearchEvent(this,context.getKeyword(), context.getUserId());
-        applicationContext.publishEvent(event);
+//        UserSearchEvent event = new UserSearchEvent(this,context.getKeyword(), context.getUserId());
+//        applicationContext.publishEvent(event);
+        UserSearchEvent event = new UserSearchEvent(context.getKeyword(), context.getUserId());
+        producer.sendMessage(PanChannels.USER_SEARCH_OUTPUT, event);
     }
 
     /***********************************************************************获取面包屑列表**********************************************/

@@ -3,8 +3,9 @@ package com.whf.pan.server.modules.test.controller;
 import com.whf.pan.core.response.R;
 import com.whf.pan.server.common.annotation.LoginIgnore;
 import com.whf.pan.server.common.event.test.TestEvent;
-//import com.whf.pan.server.common.stream.channel.PanChannels;
-//import com.whf.pan.stream.core.IStreamProducer;
+import com.whf.pan.server.common.stream.channel.PanChannels;
+import com.whf.pan.server.common.stream.event.TestEvents;
+import com.whf.pan.stream.core.IStreamProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -20,9 +21,9 @@ public class TestController implements ApplicationContextAware {
 
     private ApplicationContext applicationContext;
 
-//    @Autowired
-//    @Qualifier(value = "defaultStreamProducer")
-//    private IStreamProducer producer;
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
@@ -46,13 +47,13 @@ public class TestController implements ApplicationContextAware {
      *
      * @return
      */
-//    @GetMapping("stream/test")
-//    @LoginIgnore
-//    public R streamTest(String name) {
-//        com.whf.pan.server.common.event.test.TestEvent testEvent = new com.whf.pan.server.common.stream.event.TestEvent();
-//        testEvent.setName(name);
-//        producer.sendMessage(PanChannels.TEST_OUTPUT, testEvent);
-//        return R.success();
-//    }
+    @GetMapping("stream/test")
+    @LoginIgnore
+    public R streamTest(String name) {
+        TestEvents testEvents = new TestEvents();
+        testEvents.setName(name);
+        producer.sendMessage(PanChannels.TEST_OUTPUT, testEvents);
+        return R.success();
+    }
 
 }
