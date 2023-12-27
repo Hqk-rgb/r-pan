@@ -5,24 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.whf</groupId>
-        <artifactId>r-pan</artifactId>
+        <artifactId>framework</artifactId>
         <version>1.0</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>framework</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>core</module>
-        <module>web</module>
-        <module>swagger2</module>
-        <module>orm</module>
-        <module>cache</module>
-        <module>schedule</module>
-        <module>storage-engine</module>
-        <module>bloom-filter</module>
-        <module>lock</module>
-        <module>lock/lock-zookeeper</module>
-    </modules>
+    <artifactId>lock-zookeeper</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
