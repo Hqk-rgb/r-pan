@@ -5,21 +5,28 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.whf</groupId>
-        <artifactId>framework</artifactId>
+        <artifactId>stream</artifactId>
         <version>1.0</version>
     </parent>
 
-    <artifactId>stream</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>stream-core</module>
-        <module>stream-rocketmq</module>
-    </modules>
+    <artifactId>stream-rocketmq</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.whf</groupId>
+            <artifactId>stream-core</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-stream-rocketmq</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
