@@ -11,6 +11,7 @@ import com.whf.pan.core.constants.Constants;
 import com.whf.pan.core.exception.FrameworkException;
 import com.whf.pan.core.utils.FileUtil;
 import com.whf.pan.core.utils.UUIDUtil;
+import com.whf.pan.lock.core.annotation.Lock;
 import com.whf.pan.storage.engine.core.AbstractStorageEngine;
 import com.whf.pan.storage.engine.core.context.*;
 import com.whf.pan.storage.engine.oss.config.OssStorageEngineConfig;
@@ -180,9 +181,9 @@ public class OSSStorageEngine extends AbstractStorageEngine {
      * @param context
      * @throws IOException
      */
-    //@Lock(name = "ossDoStoreChunkLock", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
+    @Lock(name = "ossDoStoreChunkLock", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
     @Override
-    protected synchronized void doStoreChunk(StoreFileChunkContext context) throws IOException {
+    protected void doStoreChunk(StoreFileChunkContext context) throws IOException {
 
         if (context.getTotalChunks() > TEN_THOUSAND_INT) {
             throw new FrameworkException("分片数超过了限制，分片数不得大于： " + TEN_THOUSAND_INT);

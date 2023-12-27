@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.whf.pan.core.exception.BusinessException;
 import com.whf.pan.core.utils.IdUtil;
+import com.whf.pan.lock.core.annotation.Lock;
 import com.whf.pan.server.modules.file.context.FileChunkSaveContext;
 import com.whf.pan.server.modules.file.converter.FileConverter;
 import com.whf.pan.server.modules.file.entity.FileChunk;
@@ -47,9 +48,9 @@ public class FileChunkServiceImpl extends ServiceImpl<FileChunkMapper, FileChunk
      *
      * @param context
      */
-    //@Lock(name = "saveChunkFileLock", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
+    @Lock(name = "saveChunkFileLock", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
     @Override
-    public synchronized void saveChunkFile(FileChunkSaveContext context) {
+    public void saveChunkFile(FileChunkSaveContext context) {
         doSaveChunkFile(context);
         doJudgeMergeFile(context);
     }
